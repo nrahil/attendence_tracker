@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:attendence_manager/widgets/course_card.dart';
 import 'package:attendence_manager/screens/settings_screen.dart';
-
+import 'package:attendence_manager/widgets/add_course_dialog.dart';
 class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -43,13 +43,7 @@ class DashboardScreen extends StatelessWidget {
                     currentAttendance: 85,
                     totalClasses: 40,
                     onTap: () {
-                      // TODO: Navigate to Course Details screen with data
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => CourseDetailsScreen(courseId: 'DS101'),
-                      //   ),
-                      // );
+                      
                     },
                   ),
                   CourseCard(
@@ -70,12 +64,15 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Add a new course
-        },
-        child: Icon(Icons.add),
-      ),
+     floatingActionButton: FloatingActionButton(
+  onPressed: () {
+    showDialog(
+      context: context,
+      builder: (ctx) => const AddCourseDialog(),
+    );
+  },
+  child: const Icon(Icons.add),
+),    
     );
   }
 }

@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:attendence_manager/screens/auth/login_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+import 'package:attendence_manager/firebase_options.dart';
+import 'package:attendence_manager/screens/auth/login_screen.dart';
+import 'package:attendence_manager/screens/home/dashboard_screen.dart';
+
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -28,7 +38,28 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.blue,
         ),
       ),
-      home: LoginScreen(), // The app starts here.
+      // The StreamBuilder listens for auth state changes
+      home: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (ctx, snapshot) {
+          // Check the connection state of the stream
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+
+          // If there is user data, show the dashboard
+          if (snapshot.hasData) {
+            return DashboardScreen();
+          }
+
+          // If there is no user data, show the login screen
+          return LoginScreen();
+        },
+      ),
     );
   }
 }

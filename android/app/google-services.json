@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "732730417196",
+    "project_id": "attendence-tracker-ca548",
+    "storage_bucket": "attendence-tracker-ca548.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:732730417196:android:db2527e4873bb8b15db189",
+        "android_client_info": {
+          "package_name": "com.example.attendence_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD23iTeXFUVb43aP470dL6UTvrs13D0To4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
