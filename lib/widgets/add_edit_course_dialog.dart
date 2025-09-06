@@ -22,15 +22,17 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
   final currentUser = FirebaseAuth.instance.currentUser;
 
   late String _courseName;
+  late String _instructorName; // New field for instructor name
   late int _classesHeld;
   late int _classesMissed;
-  bool _isSaving = false;
+
 
   @override
   void initState() {
     super.initState();
     // Initialize fields with existing data if in edit mode, otherwise use defaults
     _courseName = widget.courseData?['courseName'] as String? ?? '';
+    _instructorName = widget.courseData?['instructorName'] as String? ?? ''; // Initialize new field
     _classesHeld = widget.courseData?['classesHeld'] as int? ?? 0;
     _classesMissed = widget.courseData?['classesMissed'] as int? ?? 0;
   }
@@ -60,6 +62,7 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 .collection('courses')
                 .add({
                   'courseName': _courseName,
+                  'instructorName': _instructorName, // Save new field
                   'attendancePercentage': attendancePercentage.toStringAsFixed(2),
                   'classesHeld': _classesHeld,
                   'classesMissed': _classesMissed,
@@ -74,6 +77,7 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 .doc(widget.courseId)
                 .update({
                   'courseName': _courseName,
+                  'instructorName': _instructorName, // Update new field
                   'attendancePercentage': attendancePercentage.toStringAsFixed(2),
                   'classesHeld': _classesHeld,
                   'classesMissed': _classesMissed,
@@ -114,6 +118,17 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 return null;
               },
               onSaved: (value) => _courseName = value!,
+            ),
+            TextFormField(
+              initialValue: _instructorName,
+              decoration: const InputDecoration(labelText: 'Instructor Name'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the instructor\'s name.';
+                }
+                return null;
+              },
+              onSaved: (value) => _instructorName = value!,
             ),
             TextFormField(
               initialValue: _classesHeld.toString(),

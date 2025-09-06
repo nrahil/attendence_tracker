@@ -4,15 +4,17 @@ import 'package:attendence_manager/widgets/attendance_progress_bar.dart';
 class CourseCard extends StatelessWidget {
   final String courseName;
   final int currentAttendance;
-  final VoidCallback onTap;
-  final VoidCallback onEdit;
+  final VoidCallback onAttended;
+  final VoidCallback onMissed;
+  final VoidCallback onDetails;
 
   const CourseCard({
     super.key,
     required this.courseName,
     required this.currentAttendance,
-    required this.onTap,
-    required this.onEdit,
+    required this.onAttended,
+    required this.onMissed,
+    required this.onDetails,
   });
 
   @override
@@ -21,7 +23,6 @@ class CourseCard extends StatelessWidget {
       elevation: 4,
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         title: Text(courseName, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
@@ -39,10 +40,17 @@ class CourseCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.blue),
-              onPressed: onEdit,
+              icon: const Icon(Icons.add_circle, color: Colors.green),
+              onPressed: onAttended,
             ),
-            const Icon(Icons.arrow_forward_ios),
+            IconButton(
+              icon: const Icon(Icons.remove_circle, color: Colors.red),
+              onPressed: onMissed,
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_ios),
+              onPressed: onDetails,
+            ),
           ],
         ),
       ),

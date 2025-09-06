@@ -3,69 +3,36 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:attendence_manager/widgets/attendance_progress_bar.dart';
 
-class CourseDetailsScreen extends StatefulWidget {
+class CourseDetailsScreen extends StatelessWidget {
   final String courseId;
-  final String courseName;
 
   const CourseDetailsScreen({
     super.key,
     required this.courseId,
-    required this.courseName,
   });
 
   @override
-  State<CourseDetailsScreen> createState() => _CourseDetailsScreenState();
-}
-
-class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
-  final firestore = FirebaseFirestore.instance;
-  final currentUser = FirebaseAuth.instance.currentUser;
-
-  Future<void> _updateAttendance(bool attended) async {
-    final courseDocRef = firestore
-        .collection('users')
-        .doc(currentUser!.uid)
-        .collection('courses')
-        .doc(widget.courseId);
-
-    return firestore.runTransaction((transaction) async {
-      final docSnapshot = await transaction.get(courseDocRef);
-      if (!docSnapshot.exists) {
-        throw Exception("Course does not exist!");
-      }
-
-      final data = docSnapshot.data() as Map<String, dynamic>;
-      int classesHeld = data['classesHeld'] as int;
-      int classesMissed = data['classesMissed'] as int;
-      
-      classesHeld += 1;
-      if (!attended) {
-        classesMissed += 1;
-      }
-      
-      final attendancePercentage = ((classesHeld - classesMissed) / classesHeld) * 100;
-
-      transaction.update(courseDocRef, {
-        'classesHeld': classesHeld,
-        'classesMissed': classesMissed,
-        'attendancePercentage': attendancePercentage.toStringAsFixed(2),
-        'lastUpdated': Timestamp.now(),
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('User not logged in.'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.courseName),
+        title: const Text('Course Details'),
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: firestore
+        stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(currentUser!.uid)
+            .doc(currentUser.uid)
             .collection('courses')
-            .doc(widget.courseId)
+            .doc(courseId)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -76,9 +43,11 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
-          final attendancePercentage = double.parse(data['attendancePercentage'] as String);
-          final classesHeld = data['classesHeld'] as int;
-          final classesMissed = data['classesMissed'] as int;
+          final courseName = data['courseName'] as String? ?? 'N/A';
+          final instructorName = data['instructorName'] as String? ?? 'N/A';
+          final attendancePercentage = double.tryParse(data['attendancePercentage'] as String? ?? '0') ?? 0;
+          final classesHeld = data['classesHeld'] as int? ?? 0;
+          final classesMissed = data['classesMissed'] as int? ?? 0;
           final classesAttended = classesHeld - classesMissed;
 
           return Padding(
@@ -86,7 +55,16 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
+                Text(
+                  courseName,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Instructor: $instructorName',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(height: 24),
                 Text(
                   'Current Attendance: ${attendancePercentage.toStringAsFixed(2)}%',
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -95,26 +73,18 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
                 AttendanceProgressBar(attendancePercentage: attendancePercentage),
                 const SizedBox(height: 20),
                 Text(
-                  'Attended: $classesAttended / $classesHeld',
+                  'Classes Attended: $classesAttended',
                   style: const TextStyle(fontSize: 16),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  'Missed: $classesMissed',
+                  'Classes Missed: $classesMissed',
                   style: const TextStyle(fontSize: 16),
                 ),
-                const Divider(height: 40),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => _updateAttendance(true),
-                      child: const Text('Attended'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _updateAttendance(false),
-                      child: const Text('Missed'),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  'Total Classes Held: $classesHeld',
+                  style: const TextStyle(fontSize: 16),
                 ),
               ],
             ),

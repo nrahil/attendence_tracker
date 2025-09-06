@@ -3,19 +3,62 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:attendence_manager/widgets/course_card.dart';
 import 'package:attendence_manager/screens/settings_screen.dart';
-import 'package:attendence_manager/widgets/add_course_dialog.dart';
+import 'package:attendence_manager/widgets/add_edit_course_dialog.dart';
 import 'package:attendence_manager/screens/home/course_details_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
+
+  // Function to update attendance when a class is attended
+  Future<void> _updateAttendance(BuildContext context, String courseId, bool attended) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final courseDocRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('courses')
+        .doc(courseId);
+
+    // Run a transaction to ensure atomic update
+    try {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final docSnapshot = await transaction.get(courseDocRef);
+        if (!docSnapshot.exists) {
+          throw Exception("Course does not exist!");
+        }
+
+        final data = docSnapshot.data() as Map<String, dynamic>;
+        int classesHeld = data['classesHeld'] as int;
+        int classesMissed = data['classesMissed'] as int;
+
+        classesHeld += 1;
+        if (!attended) {
+          classesMissed += 1;
+        }
+
+        final attendancePercentage = ((classesHeld - classesMissed) / classesHeld) * 100;
+
+        transaction.update(courseDocRef, {
+          'classesHeld': classesHeld,
+          'classesMissed': classesMissed,
+          'attendancePercentage': attendancePercentage.toStringAsFixed(2),
+        });
+      });
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update attendance. Please try again.')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
-      // Handle the case where the user is not logged in.
-      // This should ideally not happen if the app's routing is correct.
       return const Scaffold(
         body: Center(
           child: Text('User not logged in.'),
@@ -32,7 +75,7 @@ class DashboardScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsScreen()),
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
@@ -88,8 +131,7 @@ class DashboardScreen extends StatelessWidget {
                     itemBuilder: (ctx, index) {
                       final courseDoc = courseDocs[index];
                       final courseId = courseDoc.id;
-                      final courseData =
-                          courseDoc.data() as Map<String, dynamic>;
+                      final courseData = courseDoc.data() as Map<String, dynamic>;
                       final courseName = courseData['courseName'] as String;
                       final attendancePercentage = double.parse(
                           courseData['attendancePercentage'] as String);
@@ -97,25 +139,15 @@ class DashboardScreen extends StatelessWidget {
                       return CourseCard(
                         courseName: courseName,
                         currentAttendance: attendancePercentage.toInt(),
-                        onTap: () {
-        // Navigate to the CourseDetailsScreen, passing the course ID and name
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CourseDetailsScreen(
-              courseId: courseId,
-              courseName: courseName,
-            ),
-          ),
-        );
-      },
-                        onEdit: () {
-                          // Pass the course ID and data to the dialog for editing
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AddEditCourseDialog(
-                              courseId: courseId,
-                              courseData: courseData,
+                        onAttended: () => _updateAttendance(context, courseId, true),
+                        onMissed: () => _updateAttendance(context, courseId, false),
+                        onDetails: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CourseDetailsScreen(
+                                courseId: courseId,
+                              ),
                             ),
                           );
                         },
@@ -130,7 +162,6 @@ class DashboardScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Call the same dialog without any parameters for adding
           showDialog(
             context: context,
             builder: (ctx) => const AddEditCourseDialog(),
