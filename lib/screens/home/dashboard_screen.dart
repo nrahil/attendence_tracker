@@ -9,7 +9,6 @@ import 'package:attendence_manager/screens/home/course_details_screen.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  // Function to update attendance when a class is attended
   Future<void> _updateAttendance(BuildContext context, String courseId, bool attended) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -20,7 +19,6 @@ class DashboardScreen extends StatelessWidget {
         .collection('courses')
         .doc(courseId);
 
-    // Run a transaction to ensure atomic update
     try {
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final docSnapshot = await transaction.get(courseDocRef);
@@ -52,6 +50,17 @@ class DashboardScreen extends StatelessWidget {
         );
       }
     }
+  }
+
+  // Function to show the edit dialog
+  void _showEditDialog(BuildContext context, String courseId, Map<String, dynamic> courseData) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AddEditCourseDialog(
+        courseId: courseId,
+        courseData: courseData,
+      ),
+    );
   }
 
   @override
@@ -151,6 +160,8 @@ class DashboardScreen extends StatelessWidget {
                             ),
                           );
                         },
+                        // Connect the onEdit callback to the new function
+                        onEdit: () => _showEditDialog(context, courseId, courseData),
                       );
                     },
                   ),

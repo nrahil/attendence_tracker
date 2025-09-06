@@ -7,6 +7,7 @@ class CourseCard extends StatelessWidget {
   final VoidCallback onAttended;
   final VoidCallback onMissed;
   final VoidCallback onDetails;
+  final VoidCallback onEdit;
 
   const CourseCard({
     super.key,
@@ -15,6 +16,7 @@ class CourseCard extends StatelessWidget {
     required this.onAttended,
     required this.onMissed,
     required this.onDetails,
+    required this.onEdit,
   });
 
   @override
@@ -46,6 +48,10 @@ class CourseCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.remove_circle, color: Colors.red),
               onPressed: onMissed,
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue),
+              onPressed: onEdit,
             ),
             IconButton(
               icon: const Icon(Icons.arrow_forward_ios),

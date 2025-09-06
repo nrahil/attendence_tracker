@@ -3,11 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:attendence_manager/screens/auth/login_screen.dart';
 
+import 'package:attendence_manager/widgets/threshold_dialog.dart';
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   Future<void> _deleteAccount(BuildContext context) async {
-    // Show a confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -31,7 +32,6 @@ class SettingsScreen extends StatelessWidget {
       try {
         final currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser != null) {
-          // 1. Delete user's data from Firestore
           final userCourses = FirebaseFirestore.instance.collection('users').doc(currentUser.uid).collection('courses');
           final batch = FirebaseFirestore.instance.batch();
           final snapshots = await userCourses.get();
@@ -39,21 +39,17 @@ class SettingsScreen extends StatelessWidget {
             batch.delete(doc.reference);
           }
           await batch.commit();
-          
-          // 2. Delete the user's document
+
           await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).delete();
-          
-          // 3. Delete the user from Firebase Authentication
+
           await currentUser.delete();
 
-          // Navigate back to login screen after successful deletion
           if (context.mounted) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (ctx) => LoginScreen()),
               (Route<dynamic> route) => false,
             );
           }
-          
         }
       } on FirebaseAuthException catch (e) {
         if (context.mounted) {
@@ -94,39 +90,16 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.notifications, color: Colors.grey),
-            title: const Text('Notifications'),
-            subtitle: const Text('Set attendance reminders'),
-            onTap: () {
-              // TODO: Implement a Notifications settings screen
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.calendar_today, color: Colors.blue),
-            title: const Text('Manage Holidays'),
-            subtitle: const Text('Add or view institutional holidays'),
-            onTap: () {
-              // TODO: Implement a screen to manage holidays
-            },
-          ),
-          const Divider(),
+          
           ListTile(
             leading: const Icon(Icons.percent, color: Colors.blue),
             title: const Text('Attendance Threshold'),
             subtitle: const Text('Set your target attendance percentage (e.g., 75%)'),
             onTap: () {
-              // TODO: Implement a dialog or screen to set the threshold
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info_outline, color: Colors.blue),
-            title: const Text('About'),
-            subtitle: const Text('Learn more about this app'),
-            onTap: () {
-              // TODO: Navigate to an About Us page
+              showDialog(
+                context: context,
+                builder: (ctx) => const ThresholdDialog(),
+              );
             },
           ),
           const Divider(),
