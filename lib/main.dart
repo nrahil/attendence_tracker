@@ -6,7 +6,6 @@ import 'package:attendence_manager/firebase_options.dart';
 import 'package:attendence_manager/screens/auth/login_screen.dart';
 import 'package:attendence_manager/screens/home/dashboard_screen.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
