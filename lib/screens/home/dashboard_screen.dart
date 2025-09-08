@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:attendence_manager/widgets/course_card.dart';
 import 'package:attendence_manager/screens/settings_screen.dart';
 import 'package:attendence_manager/widgets/add_edit_course_dialog.dart';
-import 'package:attendence_manager/screens/home/course_details_screen.dart';
+import 'package:attendence_manager/screens/home/course_analytics_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -52,7 +52,6 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  // Function to show the edit dialog
   void _showEditDialog(BuildContext context, String courseId, Map<String, dynamic> courseData) {
     showDialog(
       context: context,
@@ -61,6 +60,53 @@ class DashboardScreen extends StatelessWidget {
         courseData: courseData,
       ),
     );
+  }
+  
+  Future<void> _deleteCourse(BuildContext context, String courseId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Course'),
+        content: const Text('Are you sure you want to delete this course?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+      
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .collection('courses')
+            .doc(courseId)
+            .delete();
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Course deleted successfully!')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to delete course.')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -109,11 +155,11 @@ class DashboardScreen extends StatelessWidget {
 
           for (var doc in courseDocs) {
             final data = doc.data() as Map<String, dynamic>;
-            final percentageString = data['attendancePercentage'] as String;
+            final percentageString = data['attendancePercentage'] as String? ?? '0';
             totalPercentage += double.parse(percentageString);
           }
 
-          final overallAttendance = totalPercentage / courseDocs.length;
+          final overallAttendance = courseDocs.isNotEmpty ? totalPercentage / courseDocs.length : 0;
           final overallText = courseDocs.isNotEmpty
               ? 'Overall Attendance: ${overallAttendance.toStringAsFixed(2)}%'
               : 'Overall Attendance: 0.00%';
@@ -142,8 +188,7 @@ class DashboardScreen extends StatelessWidget {
                       final courseId = courseDoc.id;
                       final courseData = courseDoc.data() as Map<String, dynamic>;
                       final courseName = courseData['courseName'] as String;
-                      final attendancePercentage = double.parse(
-                          courseData['attendancePercentage'] as String);
+                      final attendancePercentage = double.tryParse(courseData['attendancePercentage'] as String? ?? '0') ?? 0;
 
                       return CourseCard(
                         courseName: courseName,
@@ -154,14 +199,12 @@ class DashboardScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CourseDetailsScreen(
-                                courseId: courseId,
-                              ),
+                              builder: (context) => CourseAnalyticsScreen(courseId: courseId),
                             ),
                           );
                         },
-                        // Connect the onEdit callback to the new function
                         onEdit: () => _showEditDialog(context, courseId, courseData),
+                        onDelete: () => _deleteCourse(context, courseId),
                       );
                     },
                   ),

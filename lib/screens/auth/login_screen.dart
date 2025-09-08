@@ -15,18 +15,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final firebase = FirebaseAuth.instance;
   String enteredEmail = '';
   String enteredPassword = '';
-  bool isLoading = false; // Added to manage loading state
+  bool isLoading = false;
 
   void login() async {
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
       return;
     }
-
     formKey.currentState?.save();
 
     setState(() {
-      isLoading = true; // Set loading to true
+      isLoading = true;
     });
 
     try {
@@ -34,12 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
         email: enteredEmail,
         password: enteredPassword,
       );
-      
-      // Navigate on success
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (ctx) =>  DashboardScreen()),
-      );
-
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (ctx) => const DashboardScreen()),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -48,9 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
-      
+    } finally {
       setState(() {
-        isLoading = false; // Set loading to false on error
+        isLoading = false;
       });
     }
   }
@@ -62,63 +60,83 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text('Login'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty || !value.contains('@') || !value.contains('.')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-                onSaved: (newValue) {
-                  enteredEmail = newValue!;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty || value.length < 6) {
-                    return 'Please enter a password of at least 6 characters';
-                  }
-                  return null;
-                },
-                onSaved: (newValue) {
-                  enteredPassword = newValue!;
-                },
-              ),
-              const SizedBox(height: 30),
-              isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: login,
-                      child: const Text('Login'),
-                      style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Welcome Back!',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
                     ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignupScreen()),
-                  );
-                },
-                child: const Text('Don\'t have an account? Sign Up'),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Sign in to manage your attendance.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 40),
+                  TextFormField(
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Enter your email',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty || !value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                    onSaved: (newValue) {
+                      enteredEmail = newValue!;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty || value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                    onSaved: (newValue) {
+                      enteredPassword = newValue!;
+                    },
+                  ),
+                  const SizedBox(height: 30),
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: login,
+                          child: const Text('Login'),
+                        ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                      );
+                    },
+                    child: const Text('Don\'t have an account? Sign Up'),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

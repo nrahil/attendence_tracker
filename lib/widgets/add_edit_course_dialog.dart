@@ -22,17 +22,15 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
   final currentUser = FirebaseAuth.instance.currentUser;
 
   late String _courseName;
-  late String _instructorName; // New field for instructor name
+  late String _instructorName;
   late int _classesHeld;
   late int _classesMissed;
-
 
   @override
   void initState() {
     super.initState();
-    // Initialize fields with existing data if in edit mode, otherwise use defaults
     _courseName = widget.courseData?['courseName'] as String? ?? '';
-    _instructorName = widget.courseData?['instructorName'] as String? ?? ''; // Initialize new field
+    _instructorName = widget.courseData?['instructorName'] as String? ?? '';
     _classesHeld = widget.courseData?['classesHeld'] as int? ?? 0;
     _classesMissed = widget.courseData?['classesMissed'] as int? ?? 0;
   }
@@ -55,21 +53,19 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
       try {
         if (currentUser != null) {
           if (widget.courseId == null) {
-            // Add a new course
             await firestore
                 .collection('users')
                 .doc(currentUser!.uid)
                 .collection('courses')
                 .add({
                   'courseName': _courseName,
-                  'instructorName': _instructorName, // Save new field
+                  'instructorName': _instructorName,
                   'attendancePercentage': attendancePercentage.toStringAsFixed(2),
                   'classesHeld': _classesHeld,
                   'classesMissed': _classesMissed,
                   'createdAt': Timestamp.now(),
                 });
           } else {
-            // Update an existing course
             await firestore
                 .collection('users')
                 .doc(currentUser!.uid)
@@ -77,7 +73,7 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 .doc(widget.courseId)
                 .update({
                   'courseName': _courseName,
-                  'instructorName': _instructorName, // Update new field
+                  'instructorName': _instructorName,
                   'attendancePercentage': attendancePercentage.toStringAsFixed(2),
                   'classesHeld': _classesHeld,
                   'classesMissed': _classesMissed,
@@ -119,6 +115,7 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
               },
               onSaved: (value) => _courseName = value!,
             ),
+            const SizedBox(height: 16),
             TextFormField(
               initialValue: _instructorName,
               decoration: const InputDecoration(labelText: 'Instructor Name'),
@@ -130,6 +127,7 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
               },
               onSaved: (value) => _instructorName = value!,
             ),
+            const SizedBox(height: 16), 
             TextFormField(
               initialValue: _classesHeld.toString(),
               decoration: const InputDecoration(labelText: 'Total classes held'),
@@ -142,6 +140,7 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
               },
               onSaved: (value) => _classesHeld = int.parse(value!),
             ),
+            const SizedBox(height: 16),
             TextFormField(
               initialValue: _classesMissed.toString(),
               decoration: const InputDecoration(labelText: 'Number of classes missed'),

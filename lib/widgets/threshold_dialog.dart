@@ -41,9 +41,10 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
 
       try {
         if (currentUser != null) {
-          await firestore.collection('users').doc(currentUser!.uid).update({
-            'attendanceThreshold': _threshold,
-          });
+          await firestore.collection('users').doc(currentUser!.uid).set(
+            {'attendanceThreshold': _threshold},
+            SetOptions(merge: true),
+          );
           
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

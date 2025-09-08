@@ -8,6 +8,7 @@ class CourseCard extends StatelessWidget {
   final VoidCallback onMissed;
   final VoidCallback onDetails;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   const CourseCard({
     super.key,
@@ -17,6 +18,7 @@ class CourseCard extends StatelessWidget {
     required this.onMissed,
     required this.onDetails,
     required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -26,7 +28,10 @@ class CourseCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        title: Text(courseName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          courseName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -52,6 +57,10 @@ class CourseCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.edit, color: Colors.blue),
               onPressed: onEdit,
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: onDelete,
             ),
             IconButton(
               icon: const Icon(Icons.arrow_forward_ios),

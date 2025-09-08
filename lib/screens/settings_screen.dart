@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:attendence_manager/screens/auth/login_screen.dart';
-
 import 'package:attendence_manager/widgets/threshold_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -89,8 +88,8 @@ class SettingsScreen extends StatelessWidget {
               // TODO: Implement a dedicated Profile screen
             },
           ),
-          const Divider(),
           
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.percent, color: Colors.blue),
             title: const Text('Attendance Threshold'),
@@ -108,6 +107,12 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('Logout'),
             onTap: () async {
               await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (ctx) => LoginScreen()),
+                  (Route<dynamic> route) => false,
+                );
+              }
             },
           ),
           const Divider(),

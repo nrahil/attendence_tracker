@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AttendanceProgressBar extends StatelessWidget {
   final double attendancePercentage;
 
-  AttendanceProgressBar({required this.attendancePercentage});
+  const AttendanceProgressBar({super.key, required this.attendancePercentage});
 
   @override
   Widget build(BuildContext context) {
