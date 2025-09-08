@@ -47,22 +47,43 @@ class CourseCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
+              // The style is changed to reduce button size
+              style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
               icon: const Icon(Icons.add_circle, color: Colors.green),
               onPressed: onAttended,
             ),
             IconButton(
+              style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
               icon: const Icon(Icons.remove_circle, color: Colors.red),
               onPressed: onMissed,
             ),
             IconButton(
+              style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
               icon: const Icon(Icons.edit, color: Colors.blue),
               onPressed: onEdit,
             ),
             IconButton(
+              style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: onDelete,
             ),
             IconButton(
+              style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
               icon: const Icon(Icons.arrow_forward_ios),
               onPressed: onDetails,
             ),

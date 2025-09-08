@@ -21,7 +21,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Attendance Manager',
       theme: ThemeData(
-        primaryColor: const Color(0xFF6200EE), // A deep purple
+        // Primary color for the app bar and main buttons
+        primaryColor: const Color(0xFF6200EE), 
         primarySwatch: const MaterialColor(
           0xFF6200EE,
           <int, Color>{
@@ -37,7 +38,9 @@ class MyApp extends StatelessWidget {
             900: Color(0xFF3300C9),
           },
         ),
-        scaffoldBackgroundColor: const Color(0xFFF0F2F5),
+        // Light gray background color for a clean look
+        scaffoldBackgroundColor: const Color(0xFFF0F2F5), 
+        
         appBarTheme: const AppBarTheme(
           color: Color(0xFF6200EE),
           elevation: 0,
@@ -48,16 +51,23 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
+        
+        // Define the card theme for a consistent look
         cardTheme: CardTheme(
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          color: Colors.white, // Ensures cards are white on the gray background
         ),
+        
+        // Contrasting color for the Floating Action Button
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: Color(0xFF03DAC6),
           foregroundColor: Colors.white,
         ),
+        
+        // Modernized input field design
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
@@ -70,6 +80,8 @@ class MyApp extends StatelessWidget {
             borderSide: const BorderSide(color: Color(0xFF6200EE), width: 2),
           ),
         ),
+        
+        // Style for all Elevated Buttons
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF6200EE),
