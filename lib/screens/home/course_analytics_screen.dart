@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:attendence_manager/widgets/attendance_progress_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:attendence_manager/widgets/attendance_progress_bar.dart';
 
 class CourseAnalyticsScreen extends StatefulWidget {
   final String courseId;
@@ -73,7 +73,7 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
       await _updateAttendanceLog(date, result);
     }
   }
-  
+
   Future<void> _updateAttendanceLog(DateTime date, String status) async {
     final docId = DateFormat('yyyy-MM-dd').format(date);
     final docRef = firestore
@@ -83,19 +83,18 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
         .doc(widget.courseId)
         .collection('attendance_log')
         .doc(docId);
-        
+
     try {
       await docRef.set({
         'date': date,
         'status': status,
       });
 
-      // Recalculate attendance stats after update
       await _recalculateAttendance(currentUser!.uid, widget.courseId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Attendance for ${docId} updated to $status.')),
+          SnackBar(content: Text('Attendance for $docId updated to $status.')),
         );
       }
     } catch (e) {
@@ -108,9 +107,11 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
   }
 
   Future<void> _recalculateAttendance(String userId, String courseId) async {
-    final courseDocRef = firestore.collection('users').doc(userId).collection('courses').doc(courseId);
-    final attendanceLogSnapshot = await courseDocRef.collection('attendance_log').get();
-    
+    final courseDocRef =
+        firestore.collection('users').doc(userId).collection('courses').doc(courseId);
+    final attendanceLogSnapshot =
+        await courseDocRef.collection('attendance_log').get();
+
     int classesHeld = 0;
     int classesMissed = 0;
 
@@ -137,12 +138,16 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
 
   Color _getMarkerColor(String status) {
     switch (status) {
-      case 'attended': return Colors.green;
-      case 'missed': return Colors.red;
-      case 'holiday': 
+      case 'attended':
+        return Colors.green;
+      case 'missed':
+        return Colors.red;
+      case 'holiday':
+        return Colors.orange; // distinct color
       case 'cancelled':
         return Colors.blueGrey;
-      default: return Colors.transparent;
+      default:
+        return Colors.transparent;
     }
   }
 
@@ -168,20 +173,26 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
           }
 
           final courseData = courseSnapshot.data!.data() as Map<String, dynamic>;
-          final attendancePercentage = double.tryParse(courseData['attendancePercentage'] as String? ?? '0') ?? 0;
+          final attendancePercentage =
+              double.tryParse(courseData['attendancePercentage'] as String? ?? '0') ??
+                  0;
           final classesHeld = courseData['classesHeld'] as int? ?? 0;
           final classesMissed = courseData['classesMissed'] as int? ?? 0;
           final classesAttended = classesHeld - classesMissed;
-          
-          const double threshold = 75; 
+
+          const double threshold = 75;
 
           double classesToAttend = 0;
           double classesToMiss = 0;
 
           if (attendancePercentage < threshold) {
-            classesToAttend = (threshold * classesHeld - attendancePercentage * classesHeld) / (100 - threshold);
+            classesToAttend =
+                (threshold * classesHeld - attendancePercentage * classesHeld) /
+                    (100 - threshold);
           } else {
-            classesToMiss = (100 * (classesHeld - classesMissed) - threshold * classesHeld) / threshold;
+            classesToMiss =
+                (100 * (classesHeld - classesMissed) - threshold * classesHeld) /
+                    threshold;
           }
 
           return StreamBuilder<QuerySnapshot>(
@@ -196,13 +207,14 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
               if (attendanceSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
-              Map<DateTime, String> attendanceHistory = {};
+
+              Map<String, String> attendanceHistory = {}; // use string keys
               if (attendanceSnapshot.hasData) {
                 for (var doc in attendanceSnapshot.data!.docs) {
                   final data = doc.data() as Map<String, dynamic>;
                   final date = (data['date'] as Timestamp).toDate();
-                  attendanceHistory[DateTime(date.year, date.month, date.day)] = data['status'] as String;
+                  final key = DateFormat('yyyy-MM-dd').format(date);
+                  attendanceHistory[key] = data['status'] as String;
                 }
               }
 
@@ -214,22 +226,26 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                     children: [
                       Text(
                         widget.courseName,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Current Attendance: ${attendancePercentage.toStringAsFixed(2)}%',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
-                      AttendanceProgressBar(attendancePercentage: attendancePercentage),
+                      AttendanceProgressBar(
+                          attendancePercentage: attendancePercentage),
                       const SizedBox(height: 24),
                       TableCalendar(
                         firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.utc(2030, 12, 31),
+                        lastDay: DateTime.now(),
                         focusedDay: _focusedDay,
                         calendarFormat: _calendarFormat,
-                        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                        selectedDayPredicate: (day) =>
+                            isSameDay(_selectedDay, day),
                         onDaySelected: _onDaySelected,
                         onFormatChanged: (format) {
                           setState(() {
@@ -239,38 +255,38 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                         onPageChanged: (focusedDay) {
                           _focusedDay = focusedDay;
                         },
-                        eventLoader: (day) {
-                          final status = attendanceHistory[day];
-                          if (status != null) {
-                            return [status]; // Return a list with the status to mark the day
-                          }
-                          return [];
-                        },
                         calendarBuilders: CalendarBuilders(
-                          markerBuilder: (context, date, events) {
-                            if (events.isNotEmpty) {
-                              return Positioned(
-                                right: 1,
-                                bottom: 1,
-                                child: Container(
-                                  width: 6.0,
-                                  height: 6.0,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: _getMarkerColor(events.first as String),
+                          defaultBuilder: (context, day, focusedDay) {
+                            final key = DateFormat('yyyy-MM-dd').format(day);
+                            final status = attendanceHistory[key];
+
+                            bool isWeekend = day.weekday == DateTime.saturday ||
+                                day.weekday == DateTime.sunday;
+
+                            if (status != null) {
+                              return Container(
+                                margin: const EdgeInsets.all(6.0),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: _getMarkerColor(status),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               );
-                            }
-                            return null;
-                          },
-                          // Highlight weekends as holidays
-                          dowBuilder: (context, day) {
-                            if (day.weekday == DateTime.saturday || day.weekday == DateTime.sunday) {
+                            } else if (isWeekend) {
                               return Center(
                                 child: Text(
                                   '${day.day}',
-                                  style: const TextStyle(color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                                  style: const TextStyle(
+                                    color: Colors.blueGrey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
                               );
                             }
@@ -297,12 +313,18 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                       if (attendancePercentage < threshold)
                         Text(
                           'You need to attend ${classesToAttend.ceil()} more classes to reach your target of ${threshold.toInt()}%!',
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
                         )
                       else
                         Text(
                           'You can still miss ${classesToMiss.floor()} classes and stay above ${threshold.toInt()}%!',
-                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
                         ),
                     ],
                   ),
