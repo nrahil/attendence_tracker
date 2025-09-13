@@ -12,37 +12,31 @@ class DashboardScreen extends StatelessWidget {
   Future<void> _updateAttendance(BuildContext context, String courseId, bool attended) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-
-    final courseDocRef = FirebaseFirestore.instance
+    
+    final attendanceRef = FirebaseFirestore.instance
         .collection('users')
         .doc(currentUser.uid)
         .collection('courses')
-        .doc(courseId);
+        .doc(courseId)
+        .collection('attendance_log');
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final docId = today.toString().substring(0, 10); // Use YYYY-MM-DD as document ID
 
     try {
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final docSnapshot = await transaction.get(courseDocRef);
-        if (!docSnapshot.exists) {
-          throw Exception("Course does not exist!");
-        }
-
-        final data = docSnapshot.data() as Map<String, dynamic>;
-        int classesHeld = data['classesHeld'] as int;
-        int classesMissed = data['classesMissed'] as int;
-
-        classesHeld += 1;
-        if (!attended) {
-          classesMissed += 1;
-        }
-
-        final attendancePercentage = ((classesHeld - classesMissed) / classesHeld) * 100;
-
-        transaction.update(courseDocRef, {
-          'classesHeld': classesHeld,
-          'classesMissed': classesMissed,
-          'attendancePercentage': attendancePercentage.toStringAsFixed(2),
-        });
+      await attendanceRef.doc(docId).set({
+        'date': today,
+        'status': attended ? 'attended' : 'missed',
       });
+      
+      await _recalculateAttendance(currentUser.uid, courseId);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Attendance marked as ${attended ? 'attended' : 'missed'}!')),
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -50,6 +44,39 @@ class DashboardScreen extends StatelessWidget {
         );
       }
     }
+  }
+
+  Future<void> _recalculateAttendance(String userId, String courseId) async {
+    final courseDocRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('courses')
+        .doc(courseId);
+
+    final attendanceLogSnapshot = await courseDocRef.collection('attendance_log').get();
+    
+    int classesHeld = 0;
+    int classesMissed = 0;
+
+    for (var doc in attendanceLogSnapshot.docs) {
+      final status = doc.data()['status'] as String;
+      if (status != 'holiday' && status != 'cancelled') {
+        classesHeld++;
+        if (status == 'missed') {
+          classesMissed++;
+        }
+      }
+    }
+
+    final attendancePercentage = (classesHeld > 0)
+        ? ((classesHeld - classesMissed) / classesHeld) * 100
+        : 0.0;
+
+    await courseDocRef.update({
+      'classesHeld': classesHeld,
+      'classesMissed': classesMissed,
+      'attendancePercentage': attendancePercentage.toStringAsFixed(2),
+    });
   }
 
   void _showEditDialog(BuildContext context, String courseId, Map<String, dynamic> courseData) {
@@ -61,7 +88,7 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Future<void> _deleteCourse(BuildContext context, String courseId) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -199,7 +226,10 @@ class DashboardScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CourseAnalyticsScreen(courseId: courseId),
+                              builder: (context) => CourseAnalyticsScreen(
+                                courseId: courseId,
+                                courseName: courseName, // Pass course name to analytics screen
+                              ),
                             ),
                           );
                         },

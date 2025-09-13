@@ -1,47 +1,177 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:attendence_manager/widgets/attendance_progress_bar.dart';
+import 'package:intl/intl.dart';
 
-class CourseAnalyticsScreen extends StatelessWidget {
+class CourseAnalyticsScreen extends StatefulWidget {
   final String courseId;
+  final String courseName;
 
-  const CourseAnalyticsScreen({super.key, required this.courseId});
+  const CourseAnalyticsScreen({
+    super.key,
+    required this.courseId,
+    required this.courseName,
+  });
+
+  @override
+  State<CourseAnalyticsScreen> createState() => _CourseAnalyticsScreenState();
+}
+
+class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
+  final firestore = FirebaseFirestore.instance;
+  final currentUser = FirebaseAuth.instance.currentUser;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _focusedDay;
+  }
+
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if (!isSameDay(_selectedDay, selectedDay)) {
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+      });
+    }
+    _showUpdateAttendanceDialog(selectedDay);
+  }
+
+  Future<void> _showUpdateAttendanceDialog(DateTime date) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Update for ${DateFormat('dd-MM-yyyy').format(date)}'),
+        content: const Text('Choose attendance status:'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('attended'),
+            child: const Text('Attended'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('missed'),
+            child: const Text('Missed'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('holiday'),
+            child: const Text('Holiday'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop('cancelled'),
+            child: const Text('Cancelled'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      await _updateAttendanceLog(date, result);
+    }
+  }
+  
+  Future<void> _updateAttendanceLog(DateTime date, String status) async {
+    final docId = DateFormat('yyyy-MM-dd').format(date);
+    final docRef = firestore
+        .collection('users')
+        .doc(currentUser!.uid)
+        .collection('courses')
+        .doc(widget.courseId)
+        .collection('attendance_log')
+        .doc(docId);
+        
+    try {
+      await docRef.set({
+        'date': date,
+        'status': status,
+      });
+
+      // Recalculate attendance stats after update
+      await _recalculateAttendance(currentUser!.uid, widget.courseId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Attendance for ${docId} updated to $status.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update attendance.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _recalculateAttendance(String userId, String courseId) async {
+    final courseDocRef = firestore.collection('users').doc(userId).collection('courses').doc(courseId);
+    final attendanceLogSnapshot = await courseDocRef.collection('attendance_log').get();
+    
+    int classesHeld = 0;
+    int classesMissed = 0;
+
+    for (var doc in attendanceLogSnapshot.docs) {
+      final status = doc.data()['status'] as String;
+      if (status != 'holiday' && status != 'cancelled') {
+        classesHeld++;
+        if (status == 'missed') {
+          classesMissed++;
+        }
+      }
+    }
+
+    final attendancePercentage = (classesHeld > 0)
+        ? ((classesHeld - classesMissed) / classesHeld) * 100
+        : 0.0;
+
+    await courseDocRef.update({
+      'classesHeld': classesHeld,
+      'classesMissed': classesMissed,
+      'attendancePercentage': attendancePercentage.toStringAsFixed(2),
+    });
+  }
+
+  Color _getMarkerColor(String status) {
+    switch (status) {
+      case 'attended': return Colors.green;
+      case 'missed': return Colors.red;
+      case 'holiday': 
+      case 'cancelled':
+        return Colors.blueGrey;
+      default: return Colors.transparent;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      return const Scaffold(
-        body: Center(child: Text('User not logged in.')),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Analytics'),
+        title: Text(widget.courseName),
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
+        stream: firestore
             .collection('users')
-            .doc(currentUser.uid)
+            .doc(currentUser!.uid)
             .collection('courses')
-            .doc(courseId)
+            .doc(widget.courseId)
             .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, courseSnapshot) {
+          if (courseSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
+          if (!courseSnapshot.hasData || !courseSnapshot.data!.exists) {
             return const Center(child: Text('Course data not found.'));
           }
 
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          final courseName = data['courseName'] as String? ?? 'N/A';
-          final instructorName = data['instructorName'] as String? ?? 'N/A';
-          final attendancePercentage = double.tryParse(data['attendancePercentage'] as String? ?? '0') ?? 0;
-          final classesHeld = data['classesHeld'] as int? ?? 0;
-          final classesMissed = data['classesMissed'] as int? ?? 0;
+          final courseData = courseSnapshot.data!.data() as Map<String, dynamic>;
+          final attendancePercentage = double.tryParse(courseData['attendancePercentage'] as String? ?? '0') ?? 0;
+          final classesHeld = courseData['classesHeld'] as int? ?? 0;
+          final classesMissed = courseData['classesMissed'] as int? ?? 0;
+          final classesAttended = classesHeld - classesMissed;
           
           const double threshold = 75; 
 
@@ -53,58 +183,132 @@ class CourseAnalyticsScreen extends StatelessWidget {
           } else {
             classesToMiss = (100 * (classesHeld - classesMissed) - threshold * classesHeld) / threshold;
           }
-          
-          final classesAttended = classesHeld - classesMissed;
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  courseName,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Instructor: $instructorName',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Current Attendance: ${attendancePercentage.toStringAsFixed(2)}%',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                AttendanceProgressBar(attendancePercentage: attendancePercentage),
-                const SizedBox(height: 24),
-                Text(
-                  'Classes Attended: $classesAttended',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Classes Missed: $classesMissed',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Total Classes Held: $classesHeld',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 24),
-                if (attendancePercentage < threshold)
-                  Text(
-                    'You need to attend ${classesToAttend.ceil()} more classes to reach your target of ${threshold.toInt()}%!',
-                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
-                  )
-                else
-                  Text(
-                    'You can still miss ${classesToMiss.floor()} classes and stay above ${threshold.toInt()}%!',
-                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+          return StreamBuilder<QuerySnapshot>(
+            stream: firestore
+                .collection('users')
+                .doc(currentUser!.uid)
+                .collection('courses')
+                .doc(widget.courseId)
+                .collection('attendance_log')
+                .snapshots(),
+            builder: (context, attendanceSnapshot) {
+              if (attendanceSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              Map<DateTime, String> attendanceHistory = {};
+              if (attendanceSnapshot.hasData) {
+                for (var doc in attendanceSnapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final date = (data['date'] as Timestamp).toDate();
+                  attendanceHistory[DateTime(date.year, date.month, date.day)] = data['status'] as String;
+                }
+              }
+
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.courseName,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Current Attendance: ${attendancePercentage.toStringAsFixed(2)}%',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      AttendanceProgressBar(attendancePercentage: attendancePercentage),
+                      const SizedBox(height: 24),
+                      TableCalendar(
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _focusedDay,
+                        calendarFormat: _calendarFormat,
+                        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                        onDaySelected: _onDaySelected,
+                        onFormatChanged: (format) {
+                          setState(() {
+                            _calendarFormat = format;
+                          });
+                        },
+                        onPageChanged: (focusedDay) {
+                          _focusedDay = focusedDay;
+                        },
+                        eventLoader: (day) {
+                          final status = attendanceHistory[day];
+                          if (status != null) {
+                            return [status]; // Return a list with the status to mark the day
+                          }
+                          return [];
+                        },
+                        calendarBuilders: CalendarBuilders(
+                          markerBuilder: (context, date, events) {
+                            if (events.isNotEmpty) {
+                              return Positioned(
+                                right: 1,
+                                bottom: 1,
+                                child: Container(
+                                  width: 6.0,
+                                  height: 6.0,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _getMarkerColor(events.first as String),
+                                  ),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                          // Highlight weekends as holidays
+                          dowBuilder: (context, day) {
+                            if (day.weekday == DateTime.saturday || day.weekday == DateTime.sunday) {
+                              return Center(
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(color: Colors.blueGrey, fontStyle: FontStyle.italic),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Classes Attended: $classesAttended',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Classes Missed: $classesMissed',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Total Classes Held: $classesHeld',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 24),
+                      if (attendancePercentage < threshold)
+                        Text(
+                          'You need to attend ${classesToAttend.ceil()} more classes to reach your target of ${threshold.toInt()}%!',
+                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                        )
+                      else
+                        Text(
+                          'You can still miss ${classesToMiss.floor()} classes and stay above ${threshold.toInt()}%!',
+                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+              );
+            },
           );
         },
       ),
