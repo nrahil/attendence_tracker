@@ -24,7 +24,6 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
   late String _courseName;
   late String _instructorName;
 
-  bool _isSaving = false;
 
   @override
   void initState() {

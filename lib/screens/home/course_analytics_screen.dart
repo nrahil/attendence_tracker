@@ -70,11 +70,47 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
     );
 
     if (result != null) {
-      await _updateAttendanceLog(date, result);
+      if (result == 'attended' || result == 'missed') {
+        _showNumberInputDialog(date, result);
+      } else {
+        await _updateAttendanceLog(date, result, 0);
+      }
     }
   }
+TextEditingController _preDefined = TextEditingController(text: "1");
+  Future<void> _showNumberInputDialog(DateTime date, String status) async {
+    int count = 1;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Number of classes ${status}:'),
+        content: TextField(
+          keyboardType: TextInputType.number,
+          controller: _preDefined,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Enter number of classes'),
+          onChanged: (value) {
+            count = int.tryParse(value) ?? 1;
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _updateAttendanceLog(date, status, count);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Future<void> _updateAttendanceLog(DateTime date, String status) async {
+  Future<void> _updateAttendanceLog(DateTime date, String status, int count) async {
     final docId = DateFormat('yyyy-MM-dd').format(date);
     final docRef = firestore
         .collection('users')
@@ -88,6 +124,7 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
       await docRef.set({
         'date': date,
         'status': status,
+        'count': count,
       });
 
       await _recalculateAttendance(currentUser!.uid, widget.courseId);
@@ -117,10 +154,12 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
 
     for (var doc in attendanceLogSnapshot.docs) {
       final status = doc.data()['status'] as String;
+      final count = doc.data()['count'] as int? ?? 1;
+
       if (status != 'holiday' && status != 'cancelled') {
-        classesHeld++;
+        classesHeld += count;
         if (status == 'missed') {
-          classesMissed++;
+          classesMissed += count;
         }
       }
     }
@@ -143,7 +182,7 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
       case 'missed':
         return Colors.red;
       case 'holiday':
-        return Colors.orange; // distinct color
+        return Colors.orange;
       case 'cancelled':
         return Colors.blueGrey;
       default:
@@ -180,6 +219,7 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
           final classesMissed = courseData['classesMissed'] as int? ?? 0;
           final classesAttended = classesHeld - classesMissed;
           final instructorName = courseData['instructorName'] as String? ?? 'N/A';
+
           const double threshold = 75;
 
           double classesToAttend = 0;
@@ -208,13 +248,15 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              Map<String, String> attendanceHistory = {}; // use string keys
+              Map<String, String> attendanceHistory = {};
+              Map<String, int> attendanceCountHistory = {};
               if (attendanceSnapshot.hasData) {
                 for (var doc in attendanceSnapshot.data!.docs) {
                   final data = doc.data() as Map<String, dynamic>;
                   final date = (data['date'] as Timestamp).toDate();
                   final key = DateFormat('yyyy-MM-dd').format(date);
                   attendanceHistory[key] = data['status'] as String;
+                  attendanceCountHistory[key] = data['count'] as int? ?? 1;
                 }
               }
 
@@ -266,51 +308,66 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                                 day.weekday == DateTime.sunday;
 
                             if (status != null) {
-                              if (!isSameDay(day, DateTime.now())) {
-        return Container(
-          margin: const EdgeInsets.all(6.0),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _getMarkerColor(status),
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            '${day.day}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        );
-      } else {
-        // ✅ For today → keep default highlight, add dot below number
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '${day.day}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 2),
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: _getMarkerColor(status),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        );
-      }
+                              return Container(
+                                margin: const EdgeInsets.all(4.0),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: _getMarkerColor(status),
+                                  shape: BoxShape.circle,
+
+                                ),
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
                             } else if (isWeekend) {
                               return Center(
                                 child: Text(
                                   '${day.day}',
                                   style: const TextStyle(
-                                    color: Colors.blueGrey,
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                                      color: Colors.blueGrey,
+                                      fontStyle: FontStyle.italic),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                          todayBuilder: (context, day, focusedDay) {
+                            final key = DateFormat('yyyy-MM-dd').format(day);
+                            final status = attendanceHistory[key];
+                            final isSelected = isSameDay(day, _selectedDay);
+
+                            if (status != null) {
+                              return Container(
+                                margin: const EdgeInsets.all(4.0),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: _getMarkerColor(status),
+                                  shape: BoxShape.circle,
+                                  border: isSelected
+                                      ? Border.all(
+                                          color: Theme.of(context).primaryColor,
+                                          width: 2)
+                                      : null,
+                                ),
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              );
+                            } else if (isSelected) {
+                              return Center(
+                                child: Text(
+                                  '${day.day}',
+                                  style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               );
                             }
