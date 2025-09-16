@@ -20,21 +20,20 @@ class DashboardScreen extends StatelessWidget {
         .doc(courseId)
         .collection('attendance_log');
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final docId = today.toString().substring(0, 10); // Use YYYY-MM-DD as document ID
-
     try {
-      await attendanceRef.doc(docId).set({
-        'date': today,
+      // Create a new document with a unique ID for each class
+      await attendanceRef.add({
+        'date': DateTime.now(),
         'status': attended ? 'attended' : 'missed',
       });
       
+      // Recalculate and update attendance stats in the parent course document
       await _recalculateAttendance(currentUser.uid, courseId);
 
       if (context.mounted) {
+        final action = attended ? 'attended' : 'missed';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Attendance marked as ${attended ? 'attended' : 'missed'}!')),
+          SnackBar(content: Text('Attendance marked as $action!')),
         );
       }
     } catch (e) {
@@ -88,7 +87,7 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-
+  
   Future<void> _deleteCourse(BuildContext context, String courseId) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -226,10 +225,7 @@ class DashboardScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CourseAnalyticsScreen(
-                                courseId: courseId,
-                                courseName: courseName, // Pass course name to analytics screen
-                              ),
+                              builder: (context) => CourseAnalyticsScreen(courseId: courseId, courseName: courseName),
                             ),
                           );
                         },

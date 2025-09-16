@@ -23,26 +23,19 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
 
   late String _courseName;
   late String _instructorName;
-  late int _classesHeld;
-  late int _classesMissed;
+
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _courseName = widget.courseData?['courseName'] as String? ?? '';
     _instructorName = widget.courseData?['instructorName'] as String? ?? '';
-    _classesHeld = widget.courseData?['classesHeld'] as int? ?? 0;
-    _classesMissed = widget.courseData?['classesMissed'] as int? ?? 0;
   }
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
-      double attendancePercentage = 0.0;
-      if (_classesHeld > 0) {
-        attendancePercentage = ((_classesHeld - _classesMissed) / _classesHeld) * 100;
-      }
       
       Navigator.of(context).pop();
 
@@ -60,9 +53,9 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 .add({
                   'courseName': _courseName,
                   'instructorName': _instructorName,
-                  'attendancePercentage': attendancePercentage.toStringAsFixed(2),
-                  'classesHeld': _classesHeld,
-                  'classesMissed': _classesMissed,
+                  'attendancePercentage': '0.0', // Initial attendance is 0
+                  'classesHeld': 0, // Initial classes are 0
+                  'classesMissed': 0, // Initial classes are 0
                   'createdAt': Timestamp.now(),
                 });
           } else {
@@ -74,9 +67,6 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 .update({
                   'courseName': _courseName,
                   'instructorName': _instructorName,
-                  'attendancePercentage': attendancePercentage.toStringAsFixed(2),
-                  'classesHeld': _classesHeld,
-                  'classesMissed': _classesMissed,
                   'lastUpdated': Timestamp.now(),
                 });
           }
@@ -126,32 +116,6 @@ class _AddEditCourseDialogState extends State<AddEditCourseDialog> {
                 return null;
               },
               onSaved: (value) => _instructorName = value!,
-            ),
-            const SizedBox(height: 16), 
-            TextFormField(
-              initialValue: _classesHeld.toString(),
-              decoration: const InputDecoration(labelText: 'Total classes held'),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || int.tryParse(value) == null || int.tryParse(value)! < 0) {
-                  return 'Please enter a valid number.';
-                }
-                return null;
-              },
-              onSaved: (value) => _classesHeld = int.parse(value!),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              initialValue: _classesMissed.toString(),
-              decoration: const InputDecoration(labelText: 'Number of classes missed'),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || int.tryParse(value) == null || int.tryParse(value)! < 0) {
-                  return 'Please enter a valid number.';
-                }
-                return null;
-              },
-              onSaved: (value) => _classesMissed = int.parse(value!),
             ),
           ],
         ),
