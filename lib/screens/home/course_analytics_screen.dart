@@ -179,7 +179,7 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
           final classesHeld = courseData['classesHeld'] as int? ?? 0;
           final classesMissed = courseData['classesMissed'] as int? ?? 0;
           final classesAttended = classesHeld - classesMissed;
-
+          final instructorName = courseData['instructorName'] as String? ?? 'N/A';
           const double threshold = 75;
 
           double classesToAttend = 0;
@@ -225,7 +225,9 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.courseName,
+                        instructorName != 'N/A'
+                            ? 'Instructor: $instructorName'
+                            : 'Instructor: N/A',
                         style: const TextStyle(
                             fontSize: 24, fontWeight: FontWeight.bold),
                       ),
@@ -264,21 +266,43 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
                                 day.weekday == DateTime.sunday;
 
                             if (status != null) {
-                              return Container(
-                                margin: const EdgeInsets.all(6.0),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: _getMarkerColor(status),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '${day.day}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
+                              if (!isSameDay(day, DateTime.now())) {
+        return Container(
+          margin: const EdgeInsets.all(6.0),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _getMarkerColor(status),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            '${day.day}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      } else {
+        // ✅ For today → keep default highlight, add dot below number
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '${day.day}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: _getMarkerColor(status),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        );
+      }
                             } else if (isWeekend) {
                               return Center(
                                 child: Text(
