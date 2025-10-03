@@ -53,7 +53,7 @@ class MyApp extends StatelessWidget {
         ),
         
         // Define the card theme for a consistent look
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
