@@ -204,7 +204,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            hintText: '••••••••',
                             prefixIcon: Container(
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),

@@ -14,7 +14,9 @@ dependencies:
   cloud_firestore: ^4.13.6
   table_calendar: ^3.0.9
   intl: ^0.18.1
-  google_fonts: ^6.1.0  # NEW - Required for modern typography
+  google_fonts: ^6.1.0
+  shared_preferences: ^2.2.2 
+  share_plus: ^7.2.1          
 
   
 dev_dependencies:
