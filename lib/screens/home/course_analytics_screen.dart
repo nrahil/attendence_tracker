@@ -77,13 +77,13 @@ class _CourseAnalyticsScreenState extends State<CourseAnalyticsScreen> {
       }
     }
   }
-TextEditingController _preDefined = TextEditingController(text: "1");
+final TextEditingController _preDefined = TextEditingController(text: "1");
   Future<void> _showNumberInputDialog(DateTime date, String status) async {
     int count = 1;
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Number of classes ${status}:'),
+        title: Text('Number of classes $status:'),
         content: TextField(
           keyboardType: TextInputType.number,
           controller: _preDefined,
