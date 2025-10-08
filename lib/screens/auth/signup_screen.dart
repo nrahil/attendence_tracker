@@ -241,7 +241,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            hintText: '••••••••',
                             prefixIcon: Container(
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),
@@ -286,7 +285,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           obscureText: _obscureConfirmPassword,
                           decoration: InputDecoration(
                             labelText: 'Confirm Password',
-                            hintText: '••••••••',
                             prefixIcon: Container(
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),

@@ -13,6 +13,7 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
   final _formKey = GlobalKey<FormState>();
   int _threshold = 75;
   bool _isLoading = false;
+  final _textController = TextEditingController();
 
   final firestore = FirebaseFirestore.instance;
   final currentUser = FirebaseAuth.instance.currentUser;
@@ -23,28 +24,35 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
     _loadCurrentThreshold();
   }
 
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
   void _loadCurrentThreshold() async {
     if (currentUser != null) {
       final userDoc = await firestore.collection('users').doc(currentUser!.uid).get();
       if (userDoc.exists && userDoc.data()!.containsKey('attendanceThreshold')) {
         setState(() {
           _threshold = userDoc.data()!['attendanceThreshold'] as int;
+          _textController.text = _threshold.toString();
         });
+      } else {
+        _textController.text = _threshold.toString();
       }
     }
   }
 
   void _saveThreshold() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      
       setState(() {
         _isLoading = true;
       });
 
       try {
         if (currentUser != null) {
-          // Save the current _threshold value (from slider or input)
+          // Save the current _threshold value (updated by slider or input)
           await firestore.collection('users').doc(currentUser!.uid).set(
             {'attendanceThreshold': _threshold},
             SetOptions(merge: true),
@@ -94,6 +102,8 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
@@ -113,14 +123,16 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                          gradient: LinearGradient(
+                            colors: isDark
+                                ? [const Color(0xFF38BDF8), const Color(0xFF22D3EE)]
+                                : [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.percent_outlined,
-                          color: Colors.white,
+                          color: isDark ? const Color(0xFF0F172A) : Colors.white,
                           size: 24,
                         ),
                       ),
@@ -134,7 +146,6 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F172A),
                               ),
                             ),
                             Text(
@@ -148,7 +159,7 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Color(0xFF64748B)),
+                        icon: const Icon(Icons.close),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
@@ -163,8 +174,8 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          const Color(0xFF6366F1).withOpacity(0.1),
-                          const Color(0xFF8B5CF6).withOpacity(0.05),
+                          (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9)).withOpacity(0.1),
+                          (isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4)).withOpacity(0.05),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(16),
@@ -178,32 +189,32 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                           children: [
                             Text(
                               '$_threshold',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 56,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF6366F1),
+                                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
                                 height: 1,
                               ),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 12.0),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
                               child: Text(
                                 '%',
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF6366F1),
+                                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
                                 ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Target Attendance',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF64748B),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -212,14 +223,14 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         // Slider
                         SliderTheme(
                           data: SliderThemeData(
-                            activeTrackColor: const Color(0xFF6366F1),
+                            activeTrackColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
                             inactiveTrackColor: const Color(0xFFE2E8F0),
                             thumbColor: Colors.white,
                             thumbShape: const RoundSliderThumbShape(
                               enabledThumbRadius: 12,
                               elevation: 4,
                             ),
-                            overlayColor: const Color(0xFF6366F1).withOpacity(0.2),
+                            overlayColor: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9)).withOpacity(0.2),
                             overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
                             trackHeight: 6,
                             activeTickMarkColor: Colors.transparent,
@@ -233,6 +244,7 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                             onChanged: (value) {
                               setState(() {
                                 _threshold = value.toInt();
+                                _textController.text = _threshold.toString();
                               });
                             },
                           ),
@@ -268,7 +280,7 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                   
                   // Text input alternative
                   TextFormField(
-                    initialValue: _threshold.toString(),
+                    controller: _textController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: 'Enter Threshold Manually',
@@ -278,12 +290,12 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         margin: const EdgeInsets.all(12),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          color: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9)).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.edit_outlined,
-                          color: Color(0xFF6366F1),
+                          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
                           size: 20,
                         ),
                       ),
@@ -306,7 +318,6 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         });
                       }
                     },
-                    onSaved: (value) => _threshold = int.parse(value!),
                   ),
                   const SizedBox(height: 24),
                   
@@ -322,9 +333,9 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.info_outline,
-                          color: const Color(0xFF06B6D4),
+                          color: Color(0xFF06B6D4),
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -333,7 +344,7 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                             'This threshold helps you track if you\'re meeting your attendance goals.',
                             style: TextStyle(
                               fontSize: 13,
-                              color: const Color(0xFF0F172A).withOpacity(0.8),
+                              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A),
                               height: 1.4,
                             ),
                           ),
@@ -350,8 +361,10 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF64748B),
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            foregroundColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            side: BorderSide(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -366,8 +379,8 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _saveThreshold,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6366F1),
-                            foregroundColor: Colors.white,
+                            backgroundColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
+                            foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -375,12 +388,14 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
                             ),
                           ),
                           child: _isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      isDark ? const Color(0xFF0F172A) : Colors.white,
+                                    ),
                                   ),
                                 )
                               : const Row(
