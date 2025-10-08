@@ -7,6 +7,9 @@ import 'package:attendence_manager/screens/home/dashboard_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Global theme provider instance
+final globalThemeProvider = ThemeProvider();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -46,12 +49,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final ThemeProvider _themeProvider = ThemeProvider();
-  
   @override
   void initState() {
     super.initState();
-    _themeProvider.addListener(() {
+    globalThemeProvider.addListener(() {
       setState(() {});
     });
   }
@@ -61,7 +62,8 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Attendance Manager',
       debugShowCheckedModeBanner: false,
-      themeMode: _themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: globalThemeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      
       
       // Light Theme - Modern Blue & Teal
       theme: ThemeData(
@@ -393,7 +395,7 @@ class _MyAppState extends State<MyApp> {
               body: Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    _themeProvider.isDarkMode 
+                    globalThemeProvider.isDarkMode 
                         ? const Color(0xFF38BDF8) 
                         : const Color(0xFF0EA5E9),
                   ),
@@ -402,9 +404,9 @@ class _MyAppState extends State<MyApp> {
             );
           }
           if (snapshot.hasData) {
-            return DashboardScreen();
+            return const DashboardScreen();
           }
-          return LoginScreen();
+          return const LoginScreen();
         },
       ),
     );

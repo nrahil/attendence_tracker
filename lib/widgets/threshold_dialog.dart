@@ -44,6 +44,7 @@ class _ThresholdDialogState extends State<ThresholdDialog> {
 
       try {
         if (currentUser != null) {
+          // Save the current _threshold value (from slider or input)
           await firestore.collection('users').doc(currentUser!.uid).set(
             {'attendanceThreshold': _threshold},
             SetOptions(merge: true),

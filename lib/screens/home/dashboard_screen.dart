@@ -6,7 +6,6 @@ import 'package:attendence_manager/widgets/add_edit_course_dialog.dart';
 import 'package:attendence_manager/screens/home/course_analytics_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  
   const DashboardScreen({super.key});
 
   @override
@@ -237,7 +236,6 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     Color(0xFF6366F1),
                     Color(0xFF8B5CF6),
                   ],
-
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -390,7 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                               ),
                               const SizedBox(width: 16),
                               const Text(
-                                'Overall Attendence',
+                                'Overall Performance',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,

@@ -99,17 +99,24 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF6366F1).withOpacity(0.1),
-              const Color(0xFF8B5CF6).withOpacity(0.05),
-              Colors.white,
-            ],
+            colors: isDark
+                ? [
+                    const Color(0xFF0F172A),
+                    const Color(0xFF1E293B),
+                  ]
+                : [
+                    const Color(0xFF0EA5E9).withOpacity(0.1),
+                    const Color(0xFF06B6D4).withOpacity(0.05),
+                    Colors.white,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -130,22 +137,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF38BDF8), const Color(0xFF22D3EE)]
+                                  : [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
                             ),
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6366F1).withOpacity(0.3),
+                                color: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9))
+                                    .withOpacity(0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.school_outlined,
                             size: 50,
-                            color: Colors.white,
+                            color: isDark ? const Color(0xFF0F172A) : Colors.white,
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -154,14 +164,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         Text(
                           'Welcome Back!',
                           style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                            color: const Color(0xFF0F172A),
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Sign in to continue tracking your attendance',
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFF64748B),
+                            color: isDark 
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -177,12 +189,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF6366F1).withOpacity(0.1),
+                                color: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9))
+                                    .withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.email_outlined,
-                                color: Color(0xFF6366F1),
+                                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
                                 size: 20,
                               ),
                             ),
@@ -204,16 +217,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'Password',
+                            hintText: '••••••••',
                             prefixIcon: Container(
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF6366F1).withOpacity(0.1),
+                                color: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9))
+                                    .withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.lock_outline,
-                                color: Color(0xFF6366F1),
+                                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
                                 size: 20,
                               ),
                             ),
@@ -254,7 +269,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         const SizedBox(height: 24),
                         
-                        // Login button with gradient
+                        // Login button
                         SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -264,7 +279,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     width: 56,
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: isDark 
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
@@ -274,12 +291,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                         ),
                                       ],
                                     ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(16.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
                                       child: CircularProgressIndicator(
                                         strokeWidth: 3,
                                         valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF6366F1),
+                                          isDark 
+                                              ? const Color(0xFF38BDF8)
+                                              : const Color(0xFF0EA5E9),
                                         ),
                                       ),
                                     ),
@@ -288,9 +307,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               : ElevatedButton(
                                   onPressed: login,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF6366F1),
+                                    backgroundColor: isDark 
+                                        ? const Color(0xFF38BDF8)
+                                        : const Color(0xFF0EA5E9),
+                                    foregroundColor: isDark 
+                                        ? const Color(0xFF0F172A)
+                                        : Colors.white,
                                     elevation: 4,
-                                    shadowColor: const Color(0xFF6366F1).withOpacity(0.4),
+                                    shadowColor: (isDark 
+                                        ? const Color(0xFF38BDF8)
+                                        : const Color(0xFF0EA5E9)).withOpacity(0.4),
                                   ),
                                   child: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -310,7 +336,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             Expanded(
                               child: Container(
                                 height: 1,
-                                color: const Color(0xFFE2E8F0),
+                                color: isDark 
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
                               ),
                             ),
                             Padding(
@@ -318,7 +346,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               child: Text(
                                 'or',
                                 style: TextStyle(
-                                  color: const Color(0xFF64748B),
+                                  color: isDark 
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
                                   fontSize: 14,
                                 ),
                               ),
@@ -326,7 +356,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             Expanded(
                               child: Container(
                                 height: 1,
-                                color: const Color(0xFFE2E8F0),
+                                color: isDark 
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFE2E8F0),
                               ),
                             ),
                           ],
@@ -340,7 +372,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             Text(
                               'Don\'t have an account? ',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF64748B),
+                                color: isDark 
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
                               ),
                             ),
                             GestureDetector(
@@ -355,7 +389,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               child: Text(
                                 'Sign Up',
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF6366F1),
+                                  color: isDark 
+                                      ? const Color(0xFF38BDF8)
+                                      : const Color(0xFF0EA5E9),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

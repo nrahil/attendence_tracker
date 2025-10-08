@@ -122,17 +122,24 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF8B5CF6).withOpacity(0.1),
-              const Color(0xFF06B6D4).withOpacity(0.05),
-              Colors.white,
-            ],
+            colors: isDark
+                ? [
+                    const Color(0xFF0F172A),
+                    const Color(0xFF1E293B),
+                  ]
+                : [
+                    const Color(0xFF06B6D4).withOpacity(0.1),
+                    const Color(0xFF0EA5E9).withOpacity(0.05),
+                    Colors.white,
+                  ],
           ),
         ),
         child: SafeArea(
@@ -153,22 +160,25 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF8B5CF6), Color(0xFF06B6D4)],
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF22D3EE), const Color(0xFF38BDF8)]
+                                  : [const Color(0xFF06B6D4), const Color(0xFF0EA5E9)],
                             ),
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                color: (isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4))
+                                    .withOpacity(0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.person_add_outlined,
                             size: 50,
-                            color: Colors.white,
+                            color: isDark ? const Color(0xFF0F172A) : Colors.white,
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -177,14 +187,16 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                         Text(
                           'Create Account',
                           style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                            color: const Color(0xFF0F172A),
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Sign up to start tracking your attendance',
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFF64748B),
+                            color: isDark 
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF64748B),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -200,12 +212,13 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                color: (isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4))
+                                    .withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.email_outlined,
-                                color: Color(0xFF8B5CF6),
+                                color: isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4),
                                 size: 20,
                               ),
                             ),
@@ -228,16 +241,18 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'Password',
+                            hintText: '••••••••',
                             prefixIcon: Container(
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                color: (isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4))
+                                    .withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.lock_outline,
-                                color: Color(0xFF8B5CF6),
+                                color: isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4),
                                 size: 20,
                               ),
                             ),
@@ -271,16 +286,18 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           obscureText: _obscureConfirmPassword,
                           decoration: InputDecoration(
                             labelText: 'Confirm Password',
+                            hintText: '••••••••',
                             prefixIcon: Container(
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                color: (isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4))
+                                    .withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.lock_outline,
-                                color: Color(0xFF8B5CF6),
+                                color: isDark ? const Color(0xFF22D3EE) : const Color(0xFF06B6D4),
                                 size: 20,
                               ),
                             ),
@@ -319,7 +336,9 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                     width: 56,
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: isDark 
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
@@ -329,12 +348,14 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                                         ),
                                       ],
                                     ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(16.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
                                       child: CircularProgressIndicator(
                                         strokeWidth: 3,
                                         valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF8B5CF6),
+                                          isDark 
+                                              ? const Color(0xFF22D3EE)
+                                              : const Color(0xFF06B6D4),
                                         ),
                                       ),
                                     ),
@@ -343,9 +364,16 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               : ElevatedButton(
                                   onPressed: _signup,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF8B5CF6),
+                                    backgroundColor: isDark 
+                                        ? const Color(0xFF22D3EE)
+                                        : const Color(0xFF06B6D4),
+                                    foregroundColor: isDark 
+                                        ? const Color(0xFF0F172A)
+                                        : Colors.white,
                                     elevation: 4,
-                                    shadowColor: const Color(0xFF8B5CF6).withOpacity(0.4),
+                                    shadowColor: (isDark 
+                                        ? const Color(0xFF22D3EE)
+                                        : const Color(0xFF06B6D4)).withOpacity(0.4),
                                   ),
                                   child: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -366,7 +394,9 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                             Text(
                               'Already have an account? ',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF64748B),
+                                color: isDark 
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF64748B),
                               ),
                             ),
                             GestureDetector(
@@ -376,7 +406,9 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                               child: Text(
                                 'Sign In',
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF8B5CF6),
+                                  color: isDark 
+                                      ? const Color(0xFF22D3EE)
+                                      : const Color(0xFF06B6D4),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
