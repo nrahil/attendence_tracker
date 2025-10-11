@@ -320,25 +320,6 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 32),
                   
                   // Appearance Section
-                  _buildSectionHeader('APPEARANCE', isDark),
-                  const SizedBox(height: 12),
-                  
-                  // _buildSettingCard(
-                  //   context,
-                  //   icon: themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                  //   iconColor: isDark ? const Color(0xFFFBBF24) : const Color(0xFFF59E0B),
-                  //   title: 'Dark Mode',
-                  //   subtitle: themeProvider.isDarkMode ? 'Switch to light theme' : 'Switch to dark theme',
-                  //   isDark: isDark,
-                  //   trailing: Switch(
-                  //     value: themeProvider.isDarkMode,
-                  //     onChanged: (value) {
-                  //       themeProvider.toggleTheme();
-                  //     },
-                  //     activeColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
-                  //   ),
-                  // ),
-                  const SizedBox(height: 32),
                   
                   // Preferences Section
                   _buildSectionHeader('PREFERENCES', isDark),
