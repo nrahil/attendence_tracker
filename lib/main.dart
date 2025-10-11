@@ -27,10 +27,10 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
 
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0EA5E9), // Sky Blue
+          seedColor: const Color(0xFF0EA5E9),
           primary: const Color(0xFF0EA5E9),
-          secondary: const Color(0xFF06B6D4), // Cyan
-          tertiary: const Color(0xFF8B5CF6), // Purple accent
+          secondary: const Color(0xFF06B6D4),
+          tertiary: const Color(0xFF8B5CF6),
           surface: Colors.white,
           background: const Color(0xFFF8FAFC),
           error: const Color(0xFFEF4444),
