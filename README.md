@@ -6,34 +6,37 @@ A personalized Flutter application designed to help university students manage t
 
 ## ✨ Features
 
-- **Secure Authentication**: Users can securely sign up and log in using Firebase Authentication.  
-- **Real-time Dashboard**: The home screen provides an overview of all courses and an overall attendance percentage, updated in real time.  
-- **Quick Attendance Tracking**: Mark a class as "attended" or "missed" with a single tap directly from the dashboard.  
-- **Course Management**: A single, reusable dialog is used to easily add, edit, and delete courses.  
-- **Detailed Analytics**: A dedicated screen for each course provides insights, including classes attended, missed, and a projection of how many classes you can afford to miss to stay above your target threshold.  
-- **Customizable Settings**: Users can set their desired attendance percentage threshold, which is used for analytics and visual cues.  
+- *Secure Authentication*: Users can securely sign up and log in using Firebase Authentication.  
+- *Real-time Dashboard*: The home screen provides an overview of all courses and an overall attendance percentage, updated in real time.  
+- *Quick Attendance Tracking*: Mark a class as "attended" or "missed" with a single tap directly from the dashboard.  
+- *Course Management*: A single, reusable dialog is used to easily add, edit, and delete courses.  
+- *Detailed Analytics*: A dedicated screen for each course provides insights, including classes attended, missed, and a projection of how many classes you can afford to miss to stay above your target threshold.  
+- *Customizable Settings*: Users can set their desired attendance percentage threshold, which is used for analytics and visual cues.  
 
 ---
 
 ## 🚀 Tech Stack
 
-- **Flutter**: The primary framework for building the cross-platform application.  
-- **Firebase Authentication**: For handling user registration and login securely.  
-- **Cloud Firestore**: The NoSQL database used to store and sync all user data, including course information and attendance records.  
+- *Flutter*: The primary framework for building the cross-platform application.  
+- *Firebase Authentication*: For handling user registration and login securely.  
+- *Cloud Firestore*: The NoSQL database used to store and sync all user data, including course information and attendance records.  
 
 ---
 
 ## 📸 Screenshots  
 
-<p align="center">
-  <img src="screenshots/signup.jpg" alt="Login Screen" width="250"/>
-  <img src="screenshots/login.jpg" alt="Dashboard" width="250"/>
-  <img src="screenshots/home.jpg" alt="Add Course" width="250"/>
-</p>
+<div align="center">
 
-<p align="center">
-  <img src="screenshots/add_new.jpg" alt="Course Details" width="250"/>
-  <img src="screenshots/course_details.jpg" alt="Analytics" width="250"/>
-  <img src="screenshots/settings.jpg" alt="Settings" width="250"/>
-  <img src="screenshots/threshold.jpg" alt="Dark Mode" width="250"/>
-</p>
+| Sign Up | Sign In | Home |
+|:--:|:--:|:--:|
+| <img src="screenshots/signup.jpg" alt="SignUp Screen" width="250"/> | <img src="screenshots/signin.jpg" alt="Login Screen" width="250"/> | <img src="screenshots/home.jpg" alt="Dashboard screen" width="250"/> |
+
+| Add New | Course Details | Settings 1 |
+|:--:|:--:|:--:|
+| <img src="screenshots/add_new_dialog.jpg" alt="Add new dialog" width="250"/> | <img src="screenshots/course_details_page.jpg" alt="Course details screen" width="250"/> | <img src="screenshots/settings_page1.jpg" alt="Settings screen" width="250"/> |
+
+| Settings 2 | Threshold Dialog |
+|:--:|:--:|
+| <img src="screenshots/settings_page2.jpg" alt="Settings screen" width="250"/> | <img src="screenshots/threshold_dialog.jpg" alt="threshold_dialog" width="250"/> |
+
+</div>
