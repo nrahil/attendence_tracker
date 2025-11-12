@@ -29,7 +29,7 @@ A personalized Flutter application designed to help university students manage t
 
 | Sign Up | Sign In | Home |
 |:--:|:--:|:--:|
-| <img src="screenshots/signup_page.jpg" alt="SignUp Screen" width="250"/> | <img src="screenshots/signin_page.jpg" alt="Login Screen" width="250"/> | <img src="screenshots/home.jpg" alt="Dashboard screen" width="250"/> |
+| <img src="screenshots/signup_page.jpg" alt="SignUp Screen" width="250"/> | <img src="screenshots/signin_page.jpg" alt="Login Screen" width="250"/> | <img src="screenshots/home_page.jpg" alt="Dashboard screen" width="250"/> |
 
 | Add New | Course Details | Settings 1 |
 |:--:|:--:|:--:|
