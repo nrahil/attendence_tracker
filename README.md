@@ -29,14 +29,21 @@ A personalized Flutter application designed to help university students manage t
 
 | Sign Up | Sign In | Home |
 |:--:|:--:|:--:|
-| <img src="screenshots/signup.jpg" alt="SignUp Screen" width="250"/> | <img src="screenshots/signin.jpg" alt="Login Screen" width="250"/> | <img src="screenshots/home.jpg" alt="Dashboard screen" width="250"/> |
+| <img src="screenshots/signup_page.jpg" alt="SignUp Screen" width="250"/> | <img src="screenshots/signin_page.jpg" alt="Login Screen" width="250"/> | <img src="screenshots/home.jpg" alt="Dashboard screen" width="250"/> |
 
 | Add New | Course Details | Settings 1 |
 |:--:|:--:|:--:|
-| <img src="screenshots/add_new_dialog.jpg" alt="Add new dialog" width="250"/> | <img src="screenshots/course_details_page.jpg" alt="Course details screen" width="250"/> | <img src="screenshots/settings_page1.jpg" alt="Settings screen" width="250"/> |
+| <img src="screenshots/add_new_dialog.jpg" alt="Add new dialog" width="250"/> | <img src="screenshots/course_detail_page.jpg" alt="Course details screen" width="250"/> | <img src="screenshots/settings_page1.jpg" alt="Settings screen" width="250"/> |
 
 | Settings 2 | Threshold Dialog |
 |:--:|:--:|
 | <img src="screenshots/settings_page2.jpg" alt="Settings screen" width="250"/> | <img src="screenshots/threshold_dialog.jpg" alt="threshold_dialog" width="250"/> |
 
 </div>
+
+---
+
+## 🎥 Demo Video  
+
+🎬 **Watch the demo of the Attendance Manager app here:**  
+👉 [Click to View on Google Drive](https://drive.google.com/drive/folders/18vQU8S2a6QAyqvFrM5MS9qQI0U12jk1B?usp=drive_link)
