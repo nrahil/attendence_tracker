@@ -46,4 +46,4 @@ A personalized Flutter application designed to help university students manage t
 ## 🎥 Demo Video  
 
 🎬 **Watch the demo of the Attendance Manager app here:**  
-👉 [Click to View on Google Drive](https://drive.google.com/drive/folders/18vQU8S2a6QAyqvFrM5MS9qQI0U12jk1B?usp=drive_link)
+👉 [Click to View on Google Drive](https://drive.google.com/file/d/1CD-pLhCz1kkCE99m1GmJkZrpag93iuQg/view?usp=drive_link)
