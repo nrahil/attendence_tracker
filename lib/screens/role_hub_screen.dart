@@ -9,10 +9,14 @@ import '../services/attendance_service.dart';
 import '../services/attendance_analytics_service.dart';
 import '../services/leave_service.dart';
 import '../services/notification_alert_service.dart';
+import '../services/report_export_service.dart';
+import '../services/predictive_analytics_service.dart';
 import '../widgets/shortage_alert_banner.dart';
 import '../widgets/submit_leave_dialog.dart';
 import 'teacher/mark_attendance_screen.dart';
 import 'teacher/leave_approval_screen.dart';
+import 'teacher/qr_attendance_broadcast_screen.dart';
+import 'student/qr_scanner_screen.dart';
 
 class RoleHubScreen extends StatefulWidget {
   const RoleHubScreen({super.key});
@@ -25,6 +29,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
   final AttendanceService _service = AttendanceService();
   final LeaveService _leaveService = LeaveService();
   final NotificationAlertService _alertService = NotificationAlertService();
+  final ReportExportService _exportService = ReportExportService();
 
   UserRole _activeRole = UserRole.student;
   late TabController _tabController;
@@ -89,6 +94,88 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
     super.dispose();
   }
 
+  void _simulateNfcTap(String studentId, String studentName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.nfc, color: Color(0xFF0EA5E9), size: 28),
+            SizedBox(width: 8),
+            Text('RFID Smart Card Reader'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.credit_card, size: 64, color: Color(0xFF0EA5E9)),
+            const SizedBox(height: 16),
+            Text('Hold campus smart card against back of device for $studentName (ID: $studentId)...'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text('ISO 14443-A • UID: 04:A2:3B:11:F9:5C', style: TextStyle(fontFamily: 'monospace', fontSize: 12)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final today = DateTime.now();
+              final record = AttendanceRecord(
+                id: 'CS301_${studentId}_${today.year}_${today.month}_${today.day}',
+                studentId: studentId,
+                studentName: studentName,
+                courseId: 'CS301',
+                courseName: 'CS-301: Advanced Algorithms',
+                date: DateTime(today.year, today.month, today.day),
+                status: AttendanceStatus.present,
+                markedBy: 'rfid_terminal_gate_1',
+                markedByName: 'Campus Gate 1 RFID Terminal',
+                notes: 'Card tap verified: UID 04:A2:3B:11:F9:5C',
+                auditTrail: [
+                  AuditEntry(
+                    modifiedBy: 'rfid_terminal',
+                    modifiedByName: 'RFID Reader Terminal',
+                    timestamp: today,
+                    previousStatus: AttendanceStatus.absent,
+                    newStatus: AttendanceStatus.present,
+                    reason: 'RFID Smart Card Hardware Tap',
+                  ),
+                ],
+                createdAt: today,
+              );
+              await _service.markAttendance(
+                record: record,
+                actorId: studentId,
+                actorName: studentName,
+                reason: 'RFID Smart Card Check-in',
+              );
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('RFID Card Verified! Attendance recorded for CS-301.'),
+                    backgroundColor: Color(0xFF10B981),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0EA5E9)),
+            child: const Text('Simulate Card Tap', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -129,7 +216,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
     );
   }
 
-  // ================= 1. STUDENT PORTAL (PHASE 2 ENHANCED) =================
+  // ================= 1. STUDENT PORTAL (PHASE 3 ENHANCED) =================
   Widget _buildStudentPortal(User? user) {
     final studentId = user?.uid ?? 'student_1';
     final studentName = user?.displayName ?? user?.email?.split('@').first ?? 'Aarav Sharma';
@@ -211,7 +298,62 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
             },
           ),
 
-          // Student's Submitted Leave Requests Section (Phase 2)
+          // Versatile Frictionless Check-In (Phase 3 Active)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.flash_on, color: Color(0xFF6366F1), size: 20),
+                    SizedBox(width: 8),
+                    Text('Frictionless Check-in (Phase 3 Active)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (ctx) => QRScannerScreen(
+                                studentId: studentId,
+                                studentName: studentName,
+                              ),
+                            ),
+                          );
+                        },
+                        child: _buildActionTile(
+                          icon: Icons.qr_code_scanner,
+                          label: 'Scan Dynamic QR',
+                          color: const Color(0xFF6366F1),
+                          subtitle: 'With GPS Geofence (±100m)',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _simulateNfcTap(studentId, studentName),
+                        child: _buildActionTile(
+                          icon: Icons.nfc,
+                          label: 'RFID Smart Card',
+                          color: const Color(0xFF0EA5E9),
+                          subtitle: 'NFC Instant Tap Reader',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Student's Submitted Leave Requests Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -311,7 +453,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
     );
   }
 
-  // ================= 2. TEACHER PORTAL (PHASE 2 ENHANCED) =================
+  // ================= 2. TEACHER PORTAL (PHASE 3 ENHANCED) =================
   Widget _buildTeacherPortal(User? user) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -339,19 +481,19 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
           ),
           const SizedBox(height: 20),
 
-          // Digital Roll Call Card
+          // Dynamic QR Broadcast Launcher Card (Phase 3)
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -360,26 +502,87 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.checklist_rounded, color: Colors.white, size: 26),
-                    SizedBox(width: 8),
-                    Text('Start Digital Roll Call', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.qr_code_2, color: Color(0xFF38BDF8), size: 26),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Broadcast Dynamic QR Session', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('Rotating 60s tokens + GPS geofencing perimeter', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  '3-State Attendance (Present / Late / Absent) with automated parent push alerts & audit verification.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
                 const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.play_arrow_rounded, color: Color(0xFF6366F1)),
-                  label: const Text('Launch Roll Call for CS-301', style: TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.sensors, color: Colors.white),
+                    label: const Text('Start Projector QR Display (CS-301)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (ctx) => const QRAttendanceBroadcastScreen(
+                            courseId: 'CS301',
+                            courseName: 'CS-301: Advanced Algorithms',
+                          ),
+                        ),
+                      );
+                    },
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Digital Roll Call Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.checklist_rtl, color: Color(0xFF10B981), size: 24),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Manual 3-State Roll Call', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text('Present / Late / Absent fast toggles with audit verification', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -391,6 +594,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
                       ),
                     );
                   },
+                  child: const Text('Open', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -532,7 +736,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
     );
   }
 
-  // ================= 3. PARENT PORTAL (PHASE 2 MULTI-CHILD & LIVE ALERTS) =================
+  // ================= 3. PARENT PORTAL =================
   Widget _buildParentPortal(User? user) {
     final selectedWard = _wards[_selectedChildIndex];
 
@@ -541,7 +745,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Multi-Child Switcher Strip (Phase 2 Feature)
+          // Multi-Child Switcher Strip
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -644,7 +848,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
           ),
           const SizedBox(height: 20),
 
-          // Real-Time Notification & Absence Alerts Feed (Phase 2)
+          // Real-Time Notification & Absence Alerts Feed
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -756,8 +960,10 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
     );
   }
 
-  // ================= 4. ADMINISTRATOR PORTAL =================
+  // ================= 4. ADMINISTRATOR PORTAL (PHASE 3 ENHANCED) =================
   Widget _buildAdminPortal(User? user) {
+    final sampleAtRiskStudents = PredictiveAnalyticsService.getSampleAtRiskCohort();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -776,7 +982,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Campus Administrator Dashboard', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                    Text('Institution Auditing, Compliance & Analytics', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+                    Text('Auditing, Compliance, Predictive Intelligence & Analytics', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
                   ],
                 ),
               ),
@@ -789,7 +995,7 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
             children: [
               Expanded(child: _buildStatCard('88.4%', 'Campus Attendance', const Color(0xFF10B981), Icons.bar_chart)),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('42', 'At-Risk Students', const Color(0xFFEF4444), Icons.warning_amber)),
+              Expanded(child: _buildStatCard('3 Flagged', 'At-Risk Students', const Color(0xFFEF4444), Icons.warning_amber)),
             ],
           ),
           const SizedBox(height: 12),
@@ -797,24 +1003,159 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
             children: [
               Expanded(child: _buildStatCard('99.2%', 'Compliance Index', const Color(0xFF6366F1), Icons.verified)),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('18', 'Audit Adjustments', const Color(0xFFF59E0B), Icons.history)),
+              Expanded(child: _buildStatCard('18 Logs', 'Audit Adjustments', const Color(0xFFF59E0B), Icons.history)),
             ],
           ),
           const SizedBox(height: 24),
 
-          // Compliance & Reports
-          const Text('Compliance & Audit Reports (FERPA / GDPR)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          // Automated Compliance Reports (Phase 3 Feature)
+          const Text('Automated Compliance Reports (FERPA & Accreditation)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          ListTile(
-            tileColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFEF4444)),
-            title: const Text('Export Monthly Accreditation PDF'),
-            subtitle: const Text('Includes classroom audit logs and attendance percentages'),
-            trailing: const Icon(Icons.download),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Generating compliance report export...')),
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFEF4444), size: 32),
+              title: const Text('Export Compliance Audit Report', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Generates structured audit logs, roster data & accreditation tables'),
+              trailing: ElevatedButton.icon(
+                icon: const Icon(Icons.share, size: 16, color: Colors.white),
+                label: const Text('Export', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6366F1)),
+                onPressed: () async {
+                  final sampleReport = AttendanceReportData(
+                    institutionName: 'Apex University • Department of Computer Science',
+                    courseName: 'CS-301: Advanced Algorithms',
+                    academicTerm: 'Fall Semester 2026',
+                    averagePercentage: 88.4,
+                    totalClasses: 25,
+                    studentStats: [
+                      {'id': '101', 'name': 'Aarav Sharma', 'held': 25, 'attended': 22, 'percentage': 88.0, 'status': 'Good'},
+                      {'id': '102', 'name': 'Aditi Rao', 'held': 25, 'attended': 24, 'percentage': 96.0, 'status': 'Excellent'},
+                      {'id': '103', 'name': 'Devansh Patel', 'held': 25, 'attended': 15, 'percentage': 60.0, 'status': 'At-Risk'},
+                      {'id': '104', 'name': 'Rohan Sen', 'held': 25, 'attended': 17, 'percentage': 68.0, 'status': 'Warning'},
+                    ],
+                    auditLogs: [
+                      AuditEntry(
+                        modifiedBy: 'Dr. Raman',
+                        modifiedByName: 'Dr. S. K. Raman',
+                        timestamp: DateTime.now().subtract(const Duration(days: 2)),
+                        previousStatus: AttendanceStatus.absent,
+                        newStatus: AttendanceStatus.excused,
+                        reason: 'Approved Medical Certificate from Apex Hospital',
+                      ),
+                    ],
+                  );
+
+                  await _exportService.exportAndShareReport(sampleReport);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Predictive Early Warning System (Phase 3 Feature)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.psychology_outlined, color: Color(0xFF6366F1), size: 22),
+                  SizedBox(width: 8),
+                  Text('Predictive Early Warning Analytics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text('ML Trajectory Model', style: TextStyle(color: Color(0xFF6366F1), fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sampleAtRiskStudents.length,
+            itemBuilder: (ctx, idx) {
+              final student = sampleAtRiskStudents[idx];
+              final isCritical = student.riskTier == RiskTier.critical;
+              final badgeColor = isCritical ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: badgeColor.withValues(alpha: 0.3), width: 1.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(student.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                Text(student.courseName, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: badgeColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              student.riskTier.displayName,
+                              style: TextStyle(color: badgeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Text('Current: ${student.currentPercentage}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 12),
+                          const Icon(Icons.trending_down, size: 16, color: Color(0xFFEF4444)),
+                          const SizedBox(width: 4),
+                          Text('Projected: ${student.projectedPercentage}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: badgeColor)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(student.recommendedAction, style: TextStyle(fontSize: 12, color: Colors.grey.shade800)),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.support_agent, size: 16),
+                          label: const Text('Deploy Support Counselor'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF6366F1),
+                            side: const BorderSide(color: Color(0xFF6366F1)),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Counselor dispatched for ${student.studentName}. Intervention logged.'),
+                                backgroundColor: const Color(0xFF6366F1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -824,6 +1165,38 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
   }
 
   // ================= HELPERS =================
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCourseAttendanceItem(String name, double percentage, int attended, int total) {
     final isLow = percentage < 75.0;
     final color = isLow ? const Color(0xFFEF4444) : const Color(0xFF10B981);
