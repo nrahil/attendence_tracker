@@ -5,6 +5,7 @@ import 'package:attendence_manager/screens/auth/login_screen.dart';
 import 'package:attendence_manager/widgets/threshold_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:attendence_manager/screens/role_hub_screen.dart';
+import 'package:attendence_manager/screens/compliance/privacy_center_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -416,6 +417,22 @@ class SettingsScreen extends StatelessWidget {
 
                   // Data & Privacy Section
                   _buildSectionHeader('DATA & PRIVACY', isDark),
+                  const SizedBox(height: 12),
+
+                  _buildSettingCard(
+                    context,
+                    icon: Icons.shield_outlined,
+                    iconColor: const Color(0xFF6366F1),
+                    title: 'Privacy, FERPA & Consent Center',
+                    subtitle: 'Manage explicit consents & GDPR data rights',
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (ctx) => const PrivacyCenterScreen()),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 12),
 
                   _buildSettingCard(

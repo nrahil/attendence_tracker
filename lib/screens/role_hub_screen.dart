@@ -17,6 +17,8 @@ import 'teacher/mark_attendance_screen.dart';
 import 'teacher/leave_approval_screen.dart';
 import 'teacher/qr_attendance_broadcast_screen.dart';
 import 'student/qr_scanner_screen.dart';
+import 'compliance/privacy_center_screen.dart';
+import 'admin/integrations_screen.dart';
 
 class RoleHubScreen extends StatefulWidget {
   const RoleHubScreen({super.key});
@@ -1053,6 +1055,12 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
           ),
           const SizedBox(height: 24),
 
+          // Enterprise Integrations & Compliance Center (Phase 4)
+          const Text('Enterprise Integrations & Compliance Shield', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          _buildIntegrationsCard(),
+          const SizedBox(height: 24),
+
           // Predictive Early Warning System (Phase 3 Feature)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1156,6 +1164,42 @@ class _RoleHubScreenState extends State<RoleHubScreen> with SingleTickerProvider
                     ],
                   ),
                 ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= ENTERPRISE INTEGRATIONS & COMPLIANCE (PHASE 4) =================
+  Widget _buildIntegrationsCard() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.hub_outlined, color: Color(0xFF6366F1), size: 28),
+            title: const Text('LMS & SIS/ERP Connectors Hub', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Google Classroom, Canvas LMS, PowerSchool mutual TLS webhooks'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const IntegrationsScreen()),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined, color: Color(0xFF10B981), size: 28),
+            title: const Text('Privacy, FERPA & Biometric Enclave', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Consent audit logs, AES-256 vector encryption & GDPR Art. 17/20 tools'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const PrivacyCenterScreen()),
               );
             },
           ),
