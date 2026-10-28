@@ -137,3 +137,4 @@ class NotificationAlertService {
     await _alertsCollection.doc(alertId).update({'isRead': true});
   }
 }
+
