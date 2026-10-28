@@ -214,3 +214,4 @@ class QRAttendanceService {
     await _qrCollection.doc(sessionId).update({'isActive': false});
   }
 }
+

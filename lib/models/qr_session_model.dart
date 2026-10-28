@@ -79,3 +79,4 @@ class QRSession {
     return 'ATTEND:$id:$courseId:$nonce:${expiresAt.millisecondsSinceEpoch}:${location.latitude}:${location.longitude}:$radiusMeters';
   }
 }
+
