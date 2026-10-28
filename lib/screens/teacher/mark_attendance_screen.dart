@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/attendance_model.dart';
 import '../../services/attendance_service.dart';
+import '../../services/notification_alert_service.dart';
 
 class MarkAttendanceScreen extends StatefulWidget {
   final String courseId;
@@ -32,6 +33,7 @@ class MarkAttendanceScreen extends StatefulWidget {
 class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   DateTime _selectedDate = DateTime.now();
   final AttendanceService _service = AttendanceService();
+  final NotificationAlertService _alertService = NotificationAlertService();
   bool _isSaving = false;
 
   // Local state for the session
@@ -245,6 +247,24 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
           actorName: actorName,
           reason: existing != null ? 'Teacher session update' : 'Class session attendance',
         );
+
+        // Real-Time Automated Alert Dispatch (Phase 2)
+        if (status == AttendanceStatus.absent) {
+          await _alertService.triggerAbsenceAlert(
+            studentId: sId,
+            studentName: sName,
+            courseName: widget.courseName,
+            date: _selectedDate,
+          );
+        } else if (status == AttendanceStatus.late && minutes > 0) {
+          await _alertService.triggerTardyAlert(
+            studentId: sId,
+            studentName: sName,
+            courseName: widget.courseName,
+            lateMinutes: minutes,
+            date: _selectedDate,
+          );
+        }
       }
 
       if (mounted) {
