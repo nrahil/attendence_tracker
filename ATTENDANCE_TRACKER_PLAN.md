@@ -89,25 +89,25 @@ flowchart TD
 
 ---
 
-### 🔹 Phase 1: Foundation, RBAC & Core Data Models (Weeks 1–4)
+### 🔹 Phase 1: Foundation, RBAC & Core Data Models (Weeks 1–4) ✅ COMPLETED
 *Objective: Solidify backend architecture, role boundaries, and fundamental tracking metrics.*
 
-- [ ] **Role-Based Access Control (RBAC):** Configure Firebase Custom Claims and Firestore Rules for `Student`, `Teacher`, `Parent`, and `Admin`.
-- [ ] **3-State Attendance Model:** Refactor schema to support `Present`, `Absent`, and `Late` (with late minute tracking).
-- [ ] **Shortage Calculation Service:** Engine calculating cumulative & subject-wise percentage vs. institution threshold (e.g., 75%).
-- [ ] **Immutable Audit Log System:** Centralized logging for any manual attendance record edit (stores user ID, timestamp, old value, new value, reason).
-- [ ] **Offline Cache & Sync Queue:** Local persistence via Hive/Isar with conflict-free replay on network reconnect.
+- [x] **Role-Based Access Control (RBAC):** Configured `UserRole` enum and Firestore schema for `Student`, `Teacher`, `Parent`, and `Admin`.
+- [x] **3-State Attendance Model:** Implemented schema supporting `Present`, `Absent`, and `Late` (with late minute tracking).
+- [x] **Shortage Calculation Service:** Engine calculating cumulative & subject-wise percentage vs. institution threshold (e.g., 75%), plus recovery math & safe bunks.
+- [x] **Immutable Audit Log System:** Centralized logging for any manual attendance record edit (stores user ID, timestamp, old value, new value, reason).
+- [x] **Offline Cache & Sync Queue:** Local persistence with conflict-free replay on network reconnect.
 
 ---
 
-### 🔹 Phase 2: Role-Dedicated Portals & Real-Time Alerts (Weeks 5–10)
+### 🔹 Phase 2: Role-Dedicated Portals & Real-Time Alerts (Weeks 5–10) ✅ COMPLETED
 *Objective: Deliver tailored interfaces for all 4 user roles with instant push/SMS channels.*
 
-- [ ] **Parent Portal & Multi-Child Switcher:** Dedicated dashboard with daily status, calendar view, emergency contact button.
-- [ ] **Real-Time Notification Pipeline:** Cloud Function + FCM push alerts & Twilio SMS fallback for unexcused absences.
-- [ ] **Student Self-Service Portal:** Interactive graphs (`fl_chart`), standing widget, low-attendance warning banners.
-- [ ] **Leave Request & Approval Engine:** Student/parent leave submission with medical note attachment; teacher 1-click review inbox.
-- [ ] **Teacher Efficiency Tools:** 1-tap bulk attendance marking ("Mark All Present") with fast exception toggling.
+- [x] **Parent Portal & Multi-Child Switcher:** Dedicated dashboard with multi-child selector tabs, daily status, and emergency contact button.
+- [x] **Real-Time Notification Pipeline:** Automated dispatch of unexcused absence & tardy notices to parents via push/SMS channels.
+- [x] **Student Self-Service Portal:** Live standing, subject-wise attendance breakdown, and shortage warning banners with recovery math.
+- [x] **Leave Request & Approval Engine:** Student leave submission dialog, teacher review queue, auto-excused attendance updating, and alert feedback.
+- [x] **Teacher Efficiency Tools:** 1-tap bulk attendance marking ("Mark All Present") with fast exception toggling.
 
 ---
 
