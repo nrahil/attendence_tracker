@@ -3,11 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:attendence_manager/screens/auth/login_screen.dart';
 import 'package:attendence_manager/widgets/threshold_dialog.dart';
-import 'package:attendence_manager/main.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:attendence_manager/screens/role_hub_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
-  
   const SettingsScreen({super.key});
 
   Future<void> _deleteAccount(BuildContext context) async {
@@ -23,7 +22,8 @@ class SettingsScreen extends StatelessWidget {
                 color: const Color(0xFFEF4444).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.warning_outlined, color: Color(0xFFEF4444), size: 24),
+              child: const Icon(Icons.warning_outlined,
+                  color: Color(0xFFEF4444), size: 24),
             ),
             const SizedBox(width: 12),
             const Expanded(child: Text('Delete Account')),
@@ -73,13 +73,14 @@ class SettingsScreen extends StatelessWidget {
               .collection('users')
               .doc(currentUser.uid)
               .collection('courses');
-          
+
           final batch = FirebaseFirestore.instance.batch();
           final snapshots = await userCourses.get();
-          
+
           for (var doc in snapshots.docs) {
             // Delete attendance logs
-            final attendanceLogs = await doc.reference.collection('attendance_log').get();
+            final attendanceLogs =
+                await doc.reference.collection('attendance_log').get();
             for (var log in attendanceLogs.docs) {
               batch.delete(log.reference);
             }
@@ -114,7 +115,8 @@ class SettingsScreen extends StatelessWidget {
               ),
               backgroundColor: const Color(0xFFEF4444),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -140,14 +142,15 @@ class SettingsScreen extends StatelessWidget {
     for (var doc in coursesSnapshot.docs) {
       final data = doc.data();
       totalClasses += (data['classesHeld'] as int? ?? 0);
-      totalPercentage += double.parse(data['attendancePercentage'] as String? ?? '0');
+      totalPercentage +=
+          double.parse(data['attendancePercentage'] as String? ?? '0');
     }
 
     return {
       'courses': coursesSnapshot.docs.length,
       'totalClasses': totalClasses,
-      'avgAttendance': coursesSnapshot.docs.isNotEmpty 
-          ? totalPercentage / coursesSnapshot.docs.length 
+      'avgAttendance': coursesSnapshot.docs.isNotEmpty
+          ? totalPercentage / coursesSnapshot.docs.length
           : 0.0,
     };
   }
@@ -186,8 +189,9 @@ class SettingsScreen extends StatelessWidget {
                 background: FutureBuilder<Map<String, dynamic>>(
                   future: _getUserStats(),
                   builder: (context, snapshot) {
-                    final stats = snapshot.data ?? {'courses': 0, 'totalClasses': 0, 'avgAttendance': 0.0};
-                    
+                    final stats = snapshot.data ??
+                        {'courses': 0, 'totalClasses': 0, 'avgAttendance': 0.0};
+
                     return Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
@@ -222,7 +226,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Content
           SliverToBoxAdapter(
             child: Padding(
@@ -249,7 +253,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: isDark 
+                        color: isDark
                             ? const Color(0xFF334155)
                             : const Color(0xFFE2E8F0),
                       ),
@@ -262,13 +266,21 @@ class SettingsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: isDark
-                                  ? [const Color(0xFF38BDF8), const Color(0xFF22D3EE)]
-                                  : [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
+                                  ? [
+                                      const Color(0xFF38BDF8),
+                                      const Color(0xFF22D3EE)
+                                    ]
+                                  : [
+                                      const Color(0xFF0EA5E9),
+                                      const Color(0xFF06B6D4)
+                                    ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9))
+                                color: (isDark
+                                        ? const Color(0xFF38BDF8)
+                                        : const Color(0xFF0EA5E9))
                                     .withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 6),
@@ -277,9 +289,14 @@ class SettingsScreen extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              currentUser?.email?.substring(0, 1).toUpperCase() ?? 'U',
+                              currentUser?.email
+                                      ?.substring(0, 1)
+                                      .toUpperCase() ??
+                                  'U',
                               style: TextStyle(
-                                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                                color: isDark
+                                    ? const Color(0xFF0F172A)
+                                    : Colors.white,
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -295,7 +312,7 @@ class SettingsScreen extends StatelessWidget {
                                 'Signed in as',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDark 
+                                  color: isDark
                                       ? const Color(0xFF94A3B8)
                                       : const Color(0xFF64748B),
                                   fontWeight: FontWeight.w500,
@@ -306,7 +323,9 @@ class SettingsScreen extends StatelessWidget {
                                 currentUser?.email ?? 'No email',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
                                   fontWeight: FontWeight.w600,
                                 ),
                                 overflow: TextOverflow.ellipsis,
@@ -318,17 +337,39 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Appearance Section
-                  
+
+                  // Roles & Portals Section
+                  _buildSectionHeader('ROLES & PORTALS', isDark),
+                  const SizedBox(height: 12),
+
+                  _buildSettingCard(
+                    context,
+                    icon: Icons.hub_outlined,
+                    iconColor: const Color(0xFF6366F1),
+                    title: 'Role Portals Hub',
+                    subtitle: 'Switch between Student, Teacher, Parent & Admin views',
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RoleHubScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
                   // Preferences Section
                   _buildSectionHeader('PREFERENCES', isDark),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.percent_outlined,
-                    iconColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
+                    iconColor: isDark
+                        ? const Color(0xFF38BDF8)
+                        : const Color(0xFF0EA5E9),
                     title: 'Attendance Threshold',
                     subtitle: 'Set your target attendance percentage',
                     isDark: isDark,
@@ -340,11 +381,13 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.notifications_outlined,
-                    iconColor: isDark ? const Color(0xFFA78BFA) : const Color(0xFF8B5CF6),
+                    iconColor: isDark
+                        ? const Color(0xFFA78BFA)
+                        : const Color(0xFF8B5CF6),
                     title: 'Notifications',
                     subtitle: 'Manage notification preferences',
                     isDark: isDark,
@@ -358,7 +401,7 @@ class SettingsScreen extends StatelessWidget {
                               Text('Coming soon!'),
                             ],
                           ),
-                          backgroundColor: isDark 
+                          backgroundColor: isDark
                               ? const Color(0xFF38BDF8)
                               : const Color(0xFF0EA5E9),
                           behavior: SnackBarBehavior.floating,
@@ -370,11 +413,11 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Data & Privacy Section
                   _buildSectionHeader('DATA & PRIVACY', isDark),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.download_outlined,
@@ -391,17 +434,19 @@ class SettingsScreen extends StatelessWidget {
                             .doc(currentUser.uid)
                             .collection('courses')
                             .get();
-                        
+
                         String data = 'Attendance Report\n\n';
                         for (var doc in coursesSnapshot.docs) {
                           final course = doc.data();
                           data += 'Course: ${course['courseName']}\n';
                           data += 'Instructor: ${course['instructorName']}\n';
-                          data += 'Attendance: ${course['attendancePercentage']}%\n';
+                          data +=
+                              'Attendance: ${course['attendancePercentage']}%\n';
                           data += 'Classes Held: ${course['classesHeld']}\n';
-                          data += 'Classes Missed: ${course['classesMissed']}\n\n';
+                          data +=
+                              'Classes Missed: ${course['classesMissed']}\n\n';
                         }
-                        
+
                         await Share.share(
                           data,
                           subject: 'My Attendance Report',
@@ -410,16 +455,19 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.backup_outlined,
-                    iconColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
+                    iconColor: isDark
+                        ? const Color(0xFF38BDF8)
+                        : const Color(0xFF0EA5E9),
                     title: 'Backup & Sync',
                     subtitle: 'Your data is automatically backed up',
                     isDark: isDark,
                     trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -427,7 +475,8 @@ class SettingsScreen extends StatelessWidget {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.cloud_done, size: 14, color: Color(0xFF10B981)),
+                          Icon(Icons.cloud_done,
+                              size: 14, color: Color(0xFF10B981)),
                           SizedBox(width: 4),
                           Text(
                             'Active',
@@ -442,15 +491,17 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // About Section
                   _buildSectionHeader('ABOUT', isDark),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.info_outlined,
-                    iconColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    iconColor: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
                     title: 'About App',
                     subtitle: 'Version 2.0.0',
                     isDark: isDark,
@@ -465,8 +516,14 @@ class SettingsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: isDark
-                                  ? [const Color(0xFF38BDF8), const Color(0xFF22D3EE)]
-                                  : [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
+                                  ? [
+                                      const Color(0xFF38BDF8),
+                                      const Color(0xFF22D3EE)
+                                    ]
+                                  : [
+                                      const Color(0xFF0EA5E9),
+                                      const Color(0xFF06B6D4)
+                                    ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -486,7 +543,7 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.star_outline,
@@ -514,11 +571,13 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.share_outlined,
-                    iconColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0EA5E9),
+                    iconColor: isDark
+                        ? const Color(0xFF38BDF8)
+                        : const Color(0xFF0EA5E9),
                     title: 'Share App',
                     subtitle: 'Tell your friends about this app',
                     isDark: isDark,
@@ -530,11 +589,11 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Account Section
                   _buildSectionHeader('ACCOUNT', isDark),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.logout_outlined,
@@ -550,7 +609,8 @@ class SettingsScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content:
+                              const Text('Are you sure you want to logout?'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(ctx).pop(false),
@@ -563,7 +623,7 @@ class SettingsScreen extends StatelessWidget {
                           ],
                         ),
                       );
-                      
+
                       if (confirm == true) {
                         await FirebaseAuth.instance.signOut();
                         if (context.mounted) {
@@ -578,7 +638,7 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  
+
                   _buildSettingCard(
                     context,
                     icon: Icons.delete_forever_outlined,
@@ -590,7 +650,7 @@ class SettingsScreen extends StatelessWidget {
                     isDangerous: true,
                   ),
                   const SizedBox(height: 40),
-                  
+
                   // App Footer
                   Center(
                     child: Column(
@@ -600,15 +660,22 @@ class SettingsScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: isDark
-                                  ? [const Color(0xFF38BDF8), const Color(0xFF22D3EE)]
-                                  : [const Color(0xFF0EA5E9), const Color(0xFF06B6D4)],
+                                  ? [
+                                      const Color(0xFF38BDF8),
+                                      const Color(0xFF22D3EE)
+                                    ]
+                                  : [
+                                      const Color(0xFF0EA5E9),
+                                      const Color(0xFF06B6D4)
+                                    ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: (isDark 
-                                    ? const Color(0xFF38BDF8)
-                                    : const Color(0xFF0EA5E9)).withOpacity(0.3),
+                                color: (isDark
+                                        ? const Color(0xFF38BDF8)
+                                        : const Color(0xFF0EA5E9))
+                                    .withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 6),
                               ),
@@ -616,7 +683,8 @@ class SettingsScreen extends StatelessWidget {
                           ),
                           child: Icon(
                             Icons.school_outlined,
-                            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                            color:
+                                isDark ? const Color(0xFF0F172A) : Colors.white,
                             size: 36,
                           ),
                         ),
@@ -626,7 +694,8 @@ class SettingsScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -634,7 +703,7 @@ class SettingsScreen extends StatelessWidget {
                           'Version 2.0.0',
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark 
+                            color: isDark
                                 ? const Color(0xFF94A3B8)
                                 : const Color(0xFF64748B),
                           ),
@@ -644,7 +713,7 @@ class SettingsScreen extends StatelessWidget {
                           'Made with ❤️ by Your Team',
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark 
+                            color: isDark
                                 ? const Color(0xFF94A3B8)
                                 : const Color(0xFF64748B),
                           ),
@@ -725,7 +794,7 @@ class SettingsScreen extends StatelessWidget {
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDangerous 
+          color: isDangerous
               ? const Color(0xFFEF4444).withOpacity(0.3)
               : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
         ),
@@ -764,9 +833,11 @@ class SettingsScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDangerous 
+                          color: isDangerous
                               ? const Color(0xFFEF4444)
-                              : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                              : (isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A)),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -774,7 +845,7 @@ class SettingsScreen extends StatelessWidget {
                         subtitle,
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark 
+                          color: isDark
                               ? const Color(0xFF94A3B8)
                               : const Color(0xFF64748B),
                         ),
@@ -782,13 +853,16 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                trailing ?? Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: isDangerous 
-                      ? const Color(0xFFEF4444)
-                      : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
-                ),
+                trailing ??
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: isDangerous
+                          ? const Color(0xFFEF4444)
+                          : (isDark
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFF94A3B8)),
+                    ),
               ],
             ),
           ),

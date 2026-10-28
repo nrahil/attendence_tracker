@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:attendence_manager/screens/settings_screen.dart';
 import 'package:attendence_manager/widgets/add_edit_course_dialog.dart';
 import 'package:attendence_manager/screens/home/course_analytics_screen.dart';
+import 'package:attendence_manager/screens/role_hub_screen.dart';
+import 'package:attendence_manager/services/attendance_analytics_service.dart';
+import 'package:attendence_manager/widgets/shortage_alert_banner.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,7 +15,8 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _fabAnimationController;
 
   @override
@@ -30,10 +34,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     super.dispose();
   }
 
-  Future<void> _updateAttendance(BuildContext context, String courseId, bool attended) async {
+  Future<void> _updateAttendance(
+      BuildContext context, String courseId, bool attended) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
-    
+
     final attendanceRef = FirebaseFirestore.instance
         .collection('users')
         .doc(currentUser.uid)
@@ -46,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         'date': DateTime.now(),
         'status': attended ? 'attended' : 'missed',
       });
-      
+
       await _recalculateAttendance(currentUser.uid, courseId);
 
       if (context.mounted) {
@@ -63,9 +68,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 Text('Class marked as $action!'),
               ],
             ),
-            backgroundColor: attended ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+            backgroundColor:
+                attended ? const Color(0xFF10B981) : const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -83,7 +90,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             ),
             backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -97,8 +105,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         .collection('courses')
         .doc(courseId);
 
-    final attendanceLogSnapshot = await courseDocRef.collection('attendance_log').get();
-    
+    final attendanceLogSnapshot =
+        await courseDocRef.collection('attendance_log').get();
+
     int classesHeld = 0;
     int classesMissed = 0;
 
@@ -123,7 +132,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     });
   }
 
-  void _showEditDialog(BuildContext context, String courseId, Map<String, dynamic> courseData) {
+  void _showEditDialog(
+      BuildContext context, String courseId, Map<String, dynamic> courseData) {
     showDialog(
       context: context,
       builder: (ctx) => AddEditCourseDialog(
@@ -132,14 +142,15 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       ),
     );
   }
-  
+
   Future<void> _deleteCourse(BuildContext context, String courseId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Delete Course'),
-        content: const Text('Are you sure you want to delete this course? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this course? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -159,7 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     if (confirmed == true) {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
-      
+
       try {
         await FirebaseFirestore.instance
             .collection('users')
@@ -167,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             .collection('courses')
             .doc(courseId)
             .delete();
-        
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -180,7 +191,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               ),
               backgroundColor: const Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -197,7 +209,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               ),
               backgroundColor: const Color(0xFFEF4444),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -258,24 +271,44 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             ),
             actions: [
               Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  tooltip: 'Role Portals (Student, Teacher, Parent, Admin)',
+                  icon: const Icon(Icons.hub_outlined, color: Colors.white),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const RoleHubScreen()),
+                    );
+                  },
+                ),
+              ),
+              Container(
                 margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                  icon:
+                      const Icon(Icons.settings_outlined, color: Colors.white),
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const SettingsScreen()),
                     );
                   },
                 ),
               ),
             ],
           ),
-          
+
           // Content
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -288,13 +321,15 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 return const SliverFillRemaining(
                   child: Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
                     ),
                   ),
                 );
               }
-              
-              if (!courseSnapshot.hasData || courseSnapshot.data!.docs.isEmpty) {
+
+              if (!courseSnapshot.hasData ||
+                  courseSnapshot.data!.docs.isEmpty) {
                 return SliverFillRemaining(
                   child: Center(
                     child: Column(
@@ -316,16 +351,20 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                         const SizedBox(height: 24),
                         Text(
                           'No Courses Yet',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: const Color(0xFF0F172A),
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                color: const Color(0xFF0F172A),
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Tap the + button to add your first course',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF64748B),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF64748B),
+                                  ),
                         ),
                       ],
                     ),
@@ -335,14 +374,28 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
               final courseDocs = courseSnapshot.data!.docs;
               double totalPercentage = 0;
+              int totalClassesHeld = 0;
+              int totalClassesMissed = 0;
 
               for (var doc in courseDocs) {
                 final data = doc.data() as Map<String, dynamic>;
-                final percentageString = data['attendancePercentage'] as String? ?? '0';
+                final percentageString =
+                    data['attendancePercentage'] as String? ?? '0';
                 totalPercentage += double.parse(percentageString);
+                totalClassesHeld += (data['classesHeld'] as num?)?.toInt() ?? 0;
+                totalClassesMissed +=
+                    (data['classesMissed'] as num?)?.toInt() ?? 0;
               }
 
-              final overallAttendance = courseDocs.isNotEmpty ? totalPercentage / courseDocs.length : 0;
+              final overallAttendance = courseDocs.isNotEmpty
+                  ? totalPercentage / courseDocs.length
+                  : 0;
+              final shortageAnalysis =
+                  AttendanceAnalyticsService.calculateFromCounts(
+                classesHeld: totalClassesHeld,
+                classesMissed: totalClassesMissed,
+                threshold: 75.0,
+              );
 
               return SliverToBoxAdapter(
                 child: Column(
@@ -434,18 +487,27 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                         ],
                       ),
                     ),
-                    
+
+                    if (totalClassesHeld > 0)
+                      ShortageAlertBanner(
+                        analysis: shortageAnalysis,
+                      ),
+
                     // Courses section header
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Your Courses',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: const Color(0xFF0F172A),
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  color: const Color(0xFF0F172A),
+                                ),
                           ),
                           Text(
                             '${courseDocs.length} Total',
@@ -458,7 +520,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                         ],
                       ),
                     ),
-                    
+
                     // Course cards
                     ListView.builder(
                       shrinkWrap: true,
@@ -468,16 +530,23 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       itemBuilder: (ctx, index) {
                         final courseDoc = courseDocs[index];
                         final courseId = courseDoc.id;
-                        final courseData = courseDoc.data() as Map<String, dynamic>;
+                        final courseData =
+                            courseDoc.data() as Map<String, dynamic>;
                         final courseName = courseData['courseName'] as String;
-                        final instructorName = courseData['instructorName'] as String? ?? 'N/A';
-                        final attendancePercentage = double.tryParse(courseData['attendancePercentage'] as String? ?? '0') ?? 0;
-                        final classesHeld = courseData['classesHeld'] as int? ?? 0;
-                        final classesMissed = courseData['classesMissed'] as int? ?? 0;
+                        final instructorName =
+                            courseData['instructorName'] as String? ?? 'N/A';
+                        final attendancePercentage = double.tryParse(
+                                courseData['attendancePercentage'] as String? ??
+                                    '0') ??
+                            0;
+                        final classesHeld =
+                            courseData['classesHeld'] as int? ?? 0;
+                        final classesMissed =
+                            courseData['classesMissed'] as int? ?? 0;
                         final classesAttended = classesHeld - classesMissed;
 
                         final isGood = attendancePercentage >= 75;
-                        
+
                         return Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
@@ -519,7 +588,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                       children: [
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 courseName,
@@ -552,7 +622,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                         ),
                                         PopupMenuButton(
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
                                           icon: const Icon(
                                             Icons.more_vert,
@@ -562,28 +633,36 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                             PopupMenuItem(
                                               child: Row(
                                                 children: [
-                                                  Icon(Icons.edit_outlined, size: 18, color: Color(0xFF6366F1)),
+                                                  Icon(Icons.edit_outlined,
+                                                      size: 18,
+                                                      color: Color(0xFF6366F1)),
                                                   SizedBox(width: 12),
                                                   Text('Edit'),
                                                 ],
                                               ),
                                               onTap: () {
-                                                Future.delayed(Duration.zero, () {
-                                                  _showEditDialog(context, courseId, courseData);
+                                                Future.delayed(Duration.zero,
+                                                    () {
+                                                  _showEditDialog(context,
+                                                      courseId, courseData);
                                                 });
                                               },
                                             ),
                                             PopupMenuItem(
                                               child: Row(
                                                 children: [
-                                                  Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
+                                                  Icon(Icons.delete_outline,
+                                                      size: 18,
+                                                      color: Color(0xFFEF4444)),
                                                   SizedBox(width: 12),
                                                   Text('Delete'),
                                                 ],
                                               ),
                                               onTap: () {
-                                                Future.delayed(Duration.zero, () {
-                                                  _deleteCourse(context, courseId);
+                                                Future.delayed(Duration.zero,
+                                                    () {
+                                                  _deleteCourse(
+                                                      context, courseId);
                                                 });
                                               },
                                             ),
@@ -592,7 +671,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                       ],
                                     ),
                                     const SizedBox(height: 20),
-                                    
+
                                     // Attendance percentage with circular indicator
                                     Row(
                                       children: [
@@ -603,11 +682,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                               width: 60,
                                               height: 60,
                                               child: CircularProgressIndicator(
-                                                value: attendancePercentage / 100,
+                                                value:
+                                                    attendancePercentage / 100,
                                                 strokeWidth: 6,
-                                                backgroundColor: const Color(0xFFF1F5F9),
-                                                valueColor: AlwaysStoppedAnimation<Color>(
-                                                  isGood ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                                backgroundColor:
+                                                    const Color(0xFFF1F5F9),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(
+                                                  isGood
+                                                      ? const Color(0xFF10B981)
+                                                      : const Color(0xFFEF4444),
                                                 ),
                                               ),
                                             ),
@@ -616,7 +701,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                               style: TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
-                                                color: isGood ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                                color: isGood
+                                                    ? const Color(0xFF10B981)
+                                                    : const Color(0xFFEF4444),
                                               ),
                                             ),
                                           ],
@@ -624,14 +711,16 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                         const SizedBox(width: 20),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Row(
                                                 children: [
                                                   Container(
                                                     width: 8,
                                                     height: 8,
-                                                    decoration: const BoxDecoration(
+                                                    decoration:
+                                                        const BoxDecoration(
                                                       color: Color(0xFF10B981),
                                                       shape: BoxShape.circle,
                                                     ),
@@ -652,7 +741,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                                   Container(
                                                     width: 8,
                                                     height: 8,
-                                                    decoration: const BoxDecoration(
+                                                    decoration:
+                                                        const BoxDecoration(
                                                       color: Color(0xFFEF4444),
                                                       shape: BoxShape.circle,
                                                     ),
@@ -673,22 +763,29 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                       ],
                                     ),
                                     const SizedBox(height: 20),
-                                    
+
                                     // Action buttons
                                     Row(
                                       children: [
                                         Expanded(
                                           child: ElevatedButton.icon(
-                                            onPressed: () => _updateAttendance(context, courseId, true),
-                                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                                            onPressed: () => _updateAttendance(
+                                                context, courseId, true),
+                                            icon: const Icon(
+                                                Icons.check_circle_outline,
+                                                size: 18),
                                             label: const Text('Present'),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF10B981),
+                                              backgroundColor:
+                                                  const Color(0xFF10B981),
                                               foregroundColor: Colors.white,
                                               elevation: 0,
-                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 12),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                             ),
                                           ),
@@ -696,15 +793,23 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: OutlinedButton.icon(
-                                            onPressed: () => _updateAttendance(context, courseId, false),
-                                            icon: const Icon(Icons.cancel_outlined, size: 18),
+                                            onPressed: () => _updateAttendance(
+                                                context, courseId, false),
+                                            icon: const Icon(
+                                                Icons.cancel_outlined,
+                                                size: 18),
                                             label: const Text('Absent'),
                                             style: OutlinedButton.styleFrom(
-                                              foregroundColor: const Color(0xFFEF4444),
-                                              side: const BorderSide(color: Color(0xFFEF4444)),
-                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                              foregroundColor:
+                                                  const Color(0xFFEF4444),
+                                              side: const BorderSide(
+                                                  color: Color(0xFFEF4444)),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 12),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                             ),
                                           ),
@@ -727,7 +832,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           ),
         ],
       ),
-      
+
       // Floating action button with gradient
       floatingActionButton: Container(
         decoration: BoxDecoration(
@@ -759,4 +864,3 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 }
-                
